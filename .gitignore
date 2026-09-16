@@ -1,0 +1,21 @@
+# Python environments and build output
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.DS_Store
+
+# Local inputs and rendered output; never commit commercial music.
+assets/local/
+outputs/
+*.wav
+*.mp3
+*.flac
+*.aif
+*.aiff
+*.m4a
+*.ogg
+*.aac

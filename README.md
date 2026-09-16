@@ -40,7 +40,32 @@ Continuous Mix
 
 Early development
 
-Current milestone: audio analysis and spectral representation.
+The Python package foundation is in place. Audio processing is not implemented
+yet. Next: WAV loading and metadata extraction, followed by waveform and
+frequency analysis.
+
+## Development
+
+Requires Python 3.10 or newer. From the repository root:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e .
+python -c "import autodj; print(autodj.__file__)"
+```
+
+There are no runtime dependencies or algorithm tests yet. Tests will accompany
+the first audio component and use synthetic signals. Keep local input audio in
+`assets/local/` and generated audio in `outputs/`; both are ignored by Git.
+Public examples must use appropriately licensed audio.
+
+## Project documentation
+
+- [Full project context and engineering instructions](docs/project-context.md)
+- [Architecture](docs/architecture.md)
+- [Roadmap and next task](docs/roadmap.md)
+- [Mathematics and DSP notes](docs/math.md)
 
 ## Roadmap
 
