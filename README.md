@@ -40,9 +40,9 @@ Continuous Mix
 
 Early development
 
-The Python package foundation is in place. Audio processing is not implemented
-yet. Next: WAV loading and metadata extraction, followed by waveform and
-frequency analysis.
+The first audio component loads uncompressed 16-bit PCM WAV files and exposes
+their sample rate, channels, duration, and integer samples. Next: time-range
+selection and amplitude adjustment, followed by waveform and frequency analysis.
 
 ## Development
 
@@ -55,8 +55,25 @@ python -m pip install -e .
 python -c "import autodj; print(autodj.__file__)"
 ```
 
-There are no runtime dependencies or algorithm tests yet. Tests will accompany
-the first audio component and use synthetic signals. Keep local input audio in
+There are no runtime dependencies. Run the synthetic WAV tests with:
+
+```sh
+python -m unittest discover -s tests -v
+```
+
+Load a local 16-bit PCM WAV file:
+
+```python
+from autodj.audio import load_wav
+
+audio = load_wav("assets/local/song.wav")
+print(audio.sample_rate, audio.channels, audio.duration)
+print(audio.samples[:5])  # First five frames, one integer per channel.
+```
+
+This initial loader reads the whole file into memory as Python tuples; use small
+files while exploring. Other bit depths and floating-point WAV are unsupported.
+Keep local input audio in
 `assets/local/` and generated audio in `outputs/`; both are ignored by Git.
 Public examples must use appropriately licensed audio.
 

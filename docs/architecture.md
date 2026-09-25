@@ -1,7 +1,7 @@
 # Architecture
 
 AutoDJ will analyze, sequence, and mix locally supplied audio. The current
-implementation contains only the Python package foundation.
+implementation contains the Python package foundation and a 16-bit PCM WAV loader.
 
 The intended flow is:
 
@@ -21,7 +21,8 @@ Keep three responsibilities separate:
 - Decision-making chooses track order, transition points, and techniques.
 - Rendering manipulates audio to perform those decisions.
 
-Code lives in `src/autodj/`. Add `audio/` with the first WAV-loading task;
+Code lives in `src/autodj/`. `audio/loader.py` reads WAV files into `WavAudio`,
+which holds the sample rate, channel count, and integer samples grouped by frame;
 introduce analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. No runtime dependencies are needed yet.
