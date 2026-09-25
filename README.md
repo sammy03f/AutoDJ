@@ -42,8 +42,8 @@ Early development
 
 The first audio component loads uncompressed 16-bit PCM WAV files and exposes
 their sample rate, channels, duration, and integer samples. Time ranges can be
-selected from loaded audio. Next: amplitude adjustment, followed by waveform
-and frequency analysis.
+selected from loaded audio and their amplitude adjusted. Next: WAV saving,
+followed by waveform and frequency analysis.
 
 ## Development
 
@@ -86,6 +86,22 @@ frame indices using `floor(seconds * sample_rate)`; an endpoint equal to the
 track duration includes all remaining frames. Equal times produce an empty
 clip. Negative, reversed, nonfinite, or out-of-bounds times raise `ValueError`.
 The original audio is unchanged.
+
+Adjust a clip's amplitude:
+
+```python
+from autodj.audio import apply_gain
+
+quieter = apply_gain(clip, 0.5)  # Half the amplitude.
+louder = apply_gain(clip, 2.0)   # Twice the amplitude, with clipping if needed.
+```
+
+Gain multiplies every sample equally, preserving duration and channels. Zero
+produces silence; one preserves the samples. Results round to integers (ties
+to even) and clamp to the 16-bit range, -32768 to 32767. Clamping is clipping
+and can cause distortion. Negative or nonfinite gains raise `ValueError`.
+The original clip is unchanged. Half the amplitude does not necessarily sound
+half as loud.
 
 This initial loader reads the whole file into memory as Python tuples; use small
 files while exploring. Other bit depths and floating-point WAV are unsupported.
