@@ -41,8 +41,9 @@ Continuous Mix
 Early development
 
 The first audio component loads uncompressed 16-bit PCM WAV files and exposes
-their sample rate, channels, duration, and integer samples. Next: time-range
-selection and amplitude adjustment, followed by waveform and frequency analysis.
+their sample rate, channels, duration, and integer samples. Time ranges can be
+selected from loaded audio. Next: amplitude adjustment, followed by waveform
+and frequency analysis.
 
 ## Development
 
@@ -70,6 +71,21 @@ audio = load_wav("assets/local/song.wav")
 print(audio.sample_rate, audio.channels, audio.duration)
 print(audio.samples[:5])  # First five frames, one integer per channel.
 ```
+
+Extract seconds 10–15 from a track at least 15 seconds long:
+
+```python
+from autodj.audio import select_time_range
+
+clip = select_time_range(audio, 10.0, 15.0)
+print(clip.duration)
+```
+
+The start frame is included and the end frame is excluded. Times convert to
+frame indices using `floor(seconds * sample_rate)`; an endpoint equal to the
+track duration includes all remaining frames. Equal times produce an empty
+clip. Negative, reversed, nonfinite, or out-of-bounds times raise `ValueError`.
+The original audio is unchanged.
 
 This initial loader reads the whole file into memory as Python tuples; use small
 files while exploring. Other bit depths and floating-point WAV are unsupported.

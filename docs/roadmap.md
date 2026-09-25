@@ -4,7 +4,8 @@
 
 - [x] Establish a minimal Python package and documentation foundation.
 - [x] Load 16-bit PCM WAV audio and inspect sample rate, channels, duration, and samples.
-- [ ] Select time ranges, adjust amplitude, and save audio.
+- [x] Select time ranges from loaded audio.
+- [ ] Adjust amplitude and save audio.
 - [ ] Visualize waveforms.
 - [ ] Implement a small educational DFT and compare it with NumPy FFT.
 - [ ] Generate an STFT and spectrogram.
@@ -13,8 +14,9 @@ Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
 and invalid inputs. Samples remain signed integers grouped into frames.
 
-Next small task: select a time range from loaded audio. Explain how seconds map
-to frame indices before implementation.
+Time selection now converts seconds to frame indices, preserving channels and
+samples. Next small task: amplitude adjustment, explaining gain and clipping
+before implementation.
 
 ## Subsequent milestones
 
