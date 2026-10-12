@@ -42,8 +42,8 @@ Early development
 
 The first audio component loads uncompressed 16-bit PCM WAV files and exposes
 their sample rate, channels, duration, and integer samples. Time ranges can be
-selected from loaded audio, adjusted in amplitude, and saved as WAV. Next:
-waveform visualization, followed by frequency analysis.
+selected from loaded audio, adjusted in amplitude, saved as WAV, and plotted
+as waveform images. Next: an educational DFT and frequency analysis.
 
 ## Development
 
@@ -56,7 +56,8 @@ python -m pip install -e .
 python -c "import autodj; print(autodj.__file__)"
 ```
 
-There are no runtime dependencies. Run the synthetic WAV tests with:
+Matplotlib draws waveform images. The install command above installs it and
+its dependencies. Run the tests from the activated virtual environment with:
 
 ```sh
 python -m unittest discover -s tests -v
@@ -117,6 +118,32 @@ The output keeps the sample rate, channels, and exact integer samples. The
 parent directory must exist; saving overwrites an existing file at that path.
 Invalid metadata, frame shapes, or sample values raise `ValueError` before
 the destination is opened. Both loading and saving build audio data in memory.
+
+Save a waveform image (the `outputs/` directory must exist):
+
+```python
+from autodj.audio import save_waveform, select_time_range
+
+# A short excerpt makes individual oscillations easier to see.
+detail = select_time_range(audio, 0, min(0.02, audio.duration))
+save_waveform(detail, "outputs/waveform.png", title="First 20 milliseconds")
+```
+
+The PNG has one plot per channel, with time in seconds and raw PCM amplitude.
+All plots use the same amplitude scale so quieter audio looks smaller and
+clipping remains visible. Extracted clips start at zero on the time axis.
+Every sample is plotted; use short excerpts for detail and to limit memory use.
+Existing PNGs are overwritten. Empty audio produces an annotated empty plot.
+No GUI window is opened.
+
+Generate original, quieter, clipped, and stereo examples:
+
+```sh
+python examples/waveforms.py
+```
+
+Open the PNGs in `outputs/waveforms/` side by side to compare them. Rerunning
+the example replaces these images.
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 

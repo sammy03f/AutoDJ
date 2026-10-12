@@ -2,7 +2,7 @@
 
 AutoDJ will analyze, sequence, and mix locally supplied audio. The current
 implementation supports 16-bit PCM WAV loading, time selection, amplitude gain,
-and WAV saving.
+WAV saving, and waveform PNG export.
 
 The intended flow is:
 
@@ -26,11 +26,15 @@ Code lives in `src/autodj/`. `audio/loader.py` reads WAV files into `WavAudio`,
 which holds the sample rate, channel count, and integer samples grouped by frame.
 `audio/writer.py` validates and encodes those samples back into 16-bit PCM WAV.
 `audio/segments.py` and `audio/gain.py` return transformed audio without changing
-the input. `evals/audio_io.py` runs fixed synthetic cases and retains JSON reports
+the input. `audio/waveform.py` uses Matplotlib's noninteractive Agg renderer to
+save one amplitude-versus-time plot per channel. It plots all samples on a fixed
+16-bit PCM scale; this first version is intended for short clips.
+`evals/audio_io.py` runs fixed synthetic cases and retains JSON reports
 in `evals/results/`; generated audio stays in ignored `outputs/evals/` directories.
 Introduce analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
-over speculative abstractions. No runtime dependencies are needed yet.
+over speculative abstractions. Matplotlib is the first runtime dependency,
+used for drawing plots; PCM loading, editing, and saving use the standard library.
 
 Build an explainable deterministic baseline before adding learned models.
 Infrastructure and the product interface come after a working audio engine.

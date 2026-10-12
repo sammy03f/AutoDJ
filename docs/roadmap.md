@@ -8,7 +8,7 @@
 - [x] Adjust amplitude with gain and 16-bit clipping.
 - [x] Save audio as WAV.
 - [x] Save repeatable synthetic audio evaluation results and listening examples.
-- [ ] Visualize waveforms.
+- [x] Visualize waveforms with separate channel plots and synthetic examples.
 - [ ] Implement a small educational DFT and compare it with NumPy FFT.
 - [ ] Generate an STFT and spectrogram.
 
@@ -21,7 +21,9 @@ samples. Amplitude adjustment multiplies samples by a nonnegative gain, rounds
 to integers, and clips to the 16-bit PCM range. WAV saving completes the
 load → select → gain → save workflow. Synthetic evaluations retain JSON reports
 and local listening examples; see [evaluation history](../evals/README.md).
-Next small task: waveform visualization.
+Waveform PNGs now show each channel against time using a fixed PCM amplitude
+scale. `examples/waveforms.py` illustrates attenuation, clipping, and stereo.
+Next small task: implement a small educational DFT to introduce frequency analysis.
 
 ## Subsequent milestones
 

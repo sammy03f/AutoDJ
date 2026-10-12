@@ -19,6 +19,25 @@ with gain 2 would become 40000, so we clamp it to 32767. This is hard clipping:
 it changes the waveform and can cause audible distortion. Gain describes
 amplitude, not perceived loudness; half the amplitude need not sound half as loud.
 
+## Waveform plots
+
+A waveform places each sample's amplitude on the vertical axis and its time
+on the horizontal axis. Sample n occurs at t = n / sample_rate seconds.
+For example, four frames at 4 Hz occur at 0, 0.25, 0.5, and 0.75 seconds.
+Their total duration is 1 second; the last sample is one frame before the end.
+Each channel shares those timestamps but has its own amplitude values.
+
+Our plot uses raw integer PCM amplitudes and the same vertical scale for every
+channel and image. Automatically scaling each image independently would make
+half-gain audio look just as tall as the original. Dashed lines mark -32768
+and 32767; a heavily clipped sinusoid has flattened peaks at those limits.
+
+Connecting lines are visual guides between discrete samples, not a reconstruction
+of the continuous sound. Short excerpts show individual oscillations clearly.
+An extracted clip starts at time zero; it does not retain its original offset.
+
+## Future notes
+
 For each new algorithm, document:
 
 1. The problem it solves.
