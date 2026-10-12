@@ -6,7 +6,8 @@
 - [x] Load 16-bit PCM WAV audio and inspect sample rate, channels, duration, and samples.
 - [x] Select time ranges from loaded audio.
 - [x] Adjust amplitude with gain and 16-bit clipping.
-- [ ] Save audio as WAV.
+- [x] Save audio as WAV.
+- [x] Save repeatable synthetic audio evaluation results and listening examples.
 - [ ] Visualize waveforms.
 - [ ] Implement a small educational DFT and compare it with NumPy FFT.
 - [ ] Generate an STFT and spectrogram.
@@ -17,8 +18,10 @@ and invalid inputs. Samples remain signed integers grouped into frames.
 
 Time selection now converts seconds to frame indices, preserving channels and
 samples. Amplitude adjustment multiplies samples by a nonnegative gain, rounds
-to integers, and clips to the 16-bit PCM range. Next small task: save modified
-audio as WAV so extracted and adjusted clips can be heard.
+to integers, and clips to the 16-bit PCM range. WAV saving completes the
+load → select → gain → save workflow. Synthetic evaluations retain JSON reports
+and local listening examples; see [evaluation history](../evals/README.md).
+Next small task: waveform visualization.
 
 ## Subsequent milestones
 

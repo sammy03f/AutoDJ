@@ -42,8 +42,8 @@ Early development
 
 The first audio component loads uncompressed 16-bit PCM WAV files and exposes
 their sample rate, channels, duration, and integer samples. Time ranges can be
-selected from loaded audio and their amplitude adjusted. Next: WAV saving,
-followed by waveform and frequency analysis.
+selected from loaded audio, adjusted in amplitude, and saved as WAV. Next:
+waveform visualization, followed by frequency analysis.
 
 ## Development
 
@@ -102,6 +102,31 @@ to even) and clamp to the 16-bit range, -32768 to 32767. Clamping is clipping
 and can cause distortion. Negative or nonfinite gains raise `ValueError`.
 The original clip is unchanged. Half the amplitude does not necessarily sound
 half as loud.
+
+Save the adjusted clip as a 16-bit PCM WAV file:
+
+```python
+from pathlib import Path
+from autodj.audio import save_wav
+
+Path("outputs").mkdir(exist_ok=True)
+save_wav(quieter, "outputs/clip.wav")
+```
+
+The output keeps the sample rate, channels, and exact integer samples. The
+parent directory must exist; saving overwrites an existing file at that path.
+Invalid metadata, frame shapes, or sample values raise `ValueError` before
+the destination is opened. Both loading and saving build audio data in memory.
+
+Run the repeatable synthetic evaluation cases and save a report plus audio:
+
+```sh
+PYTHONPATH=src python3 evals/audio_io.py --label "WAV saving baseline"
+```
+
+Each run adds a JSON report under `evals/results/` and listening examples under
+`outputs/evals/`. See [evaluation history](evals/README.md) for cases, metrics,
+and how to compare runs. Reports can be committed; generated WAV files stay local.
 
 This initial loader reads the whole file into memory as Python tuples; use small
 files while exploring. Other bit depths and floating-point WAV are unsupported.
