@@ -11,7 +11,7 @@
 - [x] Visualize waveforms with separate channel plots and synthetic examples.
 - [x] Implement a small educational DFT and compare it with NumPy FFT.
 - [x] Plot a frequency spectrum and explain bin spacing and amplitude scaling.
-- [ ] Explore spectral leakage and windowing.
+- [x] Explore spectral leakage and periodic Hann windowing with gain correction.
 - [ ] Generate an STFT and spectrogram.
 
 Completed first component: a standard-library WAV loader for uncompressed
@@ -31,7 +31,10 @@ NumPy FFT comparison. `examples/dft.py` identifies two synthetic tones;
 `dsp/spectrum.py` converts the DFT to a one-sided amplitude spectrum, and
 `audio/spectrum.py` saves the plot. `examples/spectrum.py` shows the expected
 220 Hz and 440 Hz peaks with amplitudes 1 and 0.5.
-Next small task: spectral leakage and windowing before progressing to STFT.
+`dsp/windows.py` adds a periodic Hann taper. Spectra optionally use it with
+coherent-gain correction. `examples/windowing.py` compares 220/230 Hz tones and
+saves plots and numeric observations for later comparison.
+Next small task: STFT frames and their timestamps, before plotting a spectrogram.
 
 ## Subsequent milestones
 

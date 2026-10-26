@@ -66,8 +66,8 @@ positive bin is (N-1)/2. Real signals have conjugate positive/negative pairs.
 Our forward transform is unnormalized. For a real sinusoid exactly aligned
 with a bin, amplitude is `2*abs(X[k])/N` in the positive-frequency region.
 DC and the even-N Nyquist bin use `abs(X[k])/N` without doubling. Frequencies
-between bins spread across multiple bins (spectral leakage); we will study
-windows later. This first implementation applies no window or zero padding.
+between bins spread across multiple bins (spectral leakage). The direct DFT
+itself applies no window or zero padding; the spectrum helper now offers Hann.
 
 `dft` uses two explicit loops: N output bins times N input samples, or O(N²)
 work. FFT algorithms compute the same DFT in O(N log N) work. Our implementation
@@ -94,8 +94,46 @@ Raw PCM input retains PCM amplitude units; it is not scaled to [-1, 1].
 
 The plot draws a vertical line at each discrete frequency bin and auto-scales
 the vertical display range. It does not normalize peaks, add frequency bins,
-or apply a window. Exact tone amplitudes in this example rely on frequencies
-lining up with bins. Next we will examine leakage when that assumption fails.
+or apply a window by default. Exact tone amplitudes in this example rely on
+frequencies lining up with bins.
+
+## Spectral leakage and Hann windowing
+
+The DFT describes a segment as if it repeats. At 1760 Hz with 64 samples,
+220 Hz makes exactly 8 cycles, but 230 Hz makes about 8.36 cycles. Repeating
+that off-bin segment generally creates a discontinuity at the join. Its spectrum
+spreads into surrounding bins: this is leakage, not extra tones in the source.
+
+We multiply samples by a periodic Hann window before the DFT:
+
+```text
+w[n] = 0.5 - 0.5*cos(2*pi*n/N), n = 0,...,N-1
+windowed[n] = samples[n] * w[n]
+```
+
+This form omits the repeated zero endpoint. A four-point window is
+`(0, 0.5, 1, 0.5)`. Our single-point convention is `(1,)`; zero/negative or
+noninteger lengths are rejected. The periodic form is appropriate for spectral
+analysis; a symmetric Hann instead uses N-1 in the denominator and includes
+both zero endpoints. [SciPy documents both forms](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.windows.hann.html).
+
+For N>1 the average weight, called coherent gain, is 0.5. To compensate,
+replace division by N in the amplitude spectrum with division by sum(w).
+Keep the existing doubling rules for interior positive-frequency bins.
+A unit-amplitude, isolated, bin-centered tone away from DC/Nyquist then retains
+its peak amplitude. The correction is for amplitudes, not a power-density estimate.
+
+Hann lowers distant leakage but spreads the main peak more widely. It does not
+change bin spacing or remove off-bin amplitude bias (scalloping loss). Nearby
+tones or positive/negative lobes near DC/Nyquist can overlap, limiting amplitude
+estimates. Windowing does not recover information lost by taking a short segment.
+
+`examples/windowing.py` compares both tones with identical axes. Its log plots
+use `20*log10(amplitude / 1)`, with a display floor of -120 dB. Reports measure
+the largest amplitude more than two bins (55 Hz) from the known tone, excluding
+the wider Hann main lobe. This is a diagnostic for these fixtures, not total
+leaked energy or a general audio-quality score. Numeric outputs are not floored.
+Tests compare weights with NumPy and windowed spectra with an independent FFT.
 
 ## Future notes
 

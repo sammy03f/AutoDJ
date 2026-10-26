@@ -64,3 +64,17 @@ Reports retain source hashes, Git state, environment versions, and single-call
 DFT/FFT timings. These small timings include conversion overhead and are
 diagnostic only; do not treat a one-run timing difference as a performance
 regression. Known-answer unit tests separately verify the transform convention.
+
+## Windowing observations
+
+`python examples/windowing.py` generates comparison images and a timestamped
+`evals/results/windowing-*.json` report for four cases: 220 Hz and 230 Hz,
+each with a rectangular or periodic Hann window. Earlier runs remain intact.
+These are observations, not an evaluation with an aggregate pass/fail flag;
+`tests/test_windows.py` verifies correctness against known answers and NumPy.
+
+Compare peak amplitude and `max_far_amplitude` across matching case settings.
+The latter measures the largest amplitude strictly more than 55 Hz from the
+known tone, excluding the wider main lobe. It is not total leakage energy.
+The reports retain source hashes, environment versions, and diagnostic single-call
+timings. Do not treat small timing changes as performance regressions.

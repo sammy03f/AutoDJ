@@ -1,0 +1,54 @@
+{
+  "suite": "windowing_observations",
+  "suite_version": 1,
+  "created_at_utc": "2026-10-26T18:54:25.715749+00:00",
+  "sample_rate": 1760,
+  "sample_count": 64,
+  "bin_spacing_hz": 27.5,
+  "far_exclusion_radius_hz": 55.0,
+  "python": "3.14.7",
+  "matplotlib": "3.11.2",
+  "platform": "macOS-14.5-arm64-arm-64bit-Mach-O",
+  "source_sha256": {
+    "src/autodj/dsp/__init__.py": "7677ee37a10c0ab20cb1469ca19fc2cb58056f3d9635efe1a1cb538d8b16ed80",
+    "src/autodj/dsp/fourier.py": "bf7d2fae4253de580ae0052369d53c219e4e7d694d8183278fdc9c710df1a099",
+    "src/autodj/dsp/spectrum.py": "d852fc4212224e3927063594fa42a6e329c2c56a0aad26d7691b0e47f33b1b27",
+    "src/autodj/dsp/windows.py": "ad2f656f9b6ef15701cd27c36546bb7add4789d071c538a88125b0cefc4622ea",
+    "examples/windowing.py": "70fc649ffa8a74923c288648a77868cc955a8033e6dae0e5116d449fac83613e"
+  },
+  "plot": "outputs/windowing/20261026T185425.715749Z/comparison.png",
+  "cases": [
+    {
+      "tone_hz": 220,
+      "window": null,
+      "peak_bin_hz": 220.0,
+      "peak_amplitude": 1.0,
+      "max_far_amplitude": 2.1784085886430737e-15,
+      "elapsed_seconds": 0.0010089999996125698
+    },
+    {
+      "tone_hz": 220,
+      "window": "hann",
+      "peak_bin_hz": 220.0,
+      "peak_amplitude": 1.0000000000000002,
+      "max_far_amplitude": 2.1657890810019352e-15,
+      "elapsed_seconds": 0.0010350418742746115
+    },
+    {
+      "tone_hz": 230,
+      "window": null,
+      "peak_bin_hz": 220.0,
+      "peak_amplitude": 0.7944221272380162,
+      "max_far_amplitude": 0.1223888103270168,
+      "elapsed_seconds": 0.0009957500733435154
+    },
+    {
+      "tone_hz": 230,
+      "window": "hann",
+      "peak_bin_hz": 220.0,
+      "peak_amplitude": 0.9175395305584256,
+      "max_far_amplitude": 0.026770040403799576,
+      "elapsed_seconds": 0.0010124999098479748
+    }
+  ]
+}

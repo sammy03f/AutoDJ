@@ -36,6 +36,9 @@ standard library. It is intentionally O(N²) for learning on short signals.
 `dsp/spectrum.py` computes one-sided frequency/amplitude pairs for real input;
 `audio/spectrum.py` draws those values with Matplotlib. The numerical calculation
 is tested independently of rendering, including DC, Nyquist, and odd lengths.
+`dsp/windows.py` implements the periodic Hann formula without another dependency.
+The spectrum functions accept `window="hann"` and correct amplitude by dividing
+by the sum of the weights. Default rectangular-window behavior is preserved.
 NumPy is declared explicitly for independent FFT comparisons in tests, examples,
 and `evals/dft.py`. Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data

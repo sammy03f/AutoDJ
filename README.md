@@ -45,7 +45,8 @@ their sample rate, channels, duration, and integer samples. Time ranges can be
 selected from loaded audio, adjusted in amplitude, saved as WAV, and plotted
 as waveform images. A small educational DFT now extracts frequency coefficients
 and is checked against NumPy's FFT. Frequency spectrum PNGs show the amplitudes
-of those components. Next: spectral leakage and windowing before STFT.
+of those components, with optional Hann windowing to reduce distant leakage.
+Next: STFT, which follows frequency content over time.
 
 ## Development
 
@@ -202,6 +203,32 @@ python examples/spectrum.py
 Open `outputs/spectra/two_tones.png`. For numeric results without plotting, use
 `frequencies, amplitudes = amplitude_spectrum(samples, sample_rate)` from
 `autodj.dsp`.
+
+Apply a periodic Hann window when computing or plotting a spectrum:
+
+```python
+from autodj.dsp import amplitude_spectrum
+
+frequencies, amplitudes = amplitude_spectrum(samples, sample_rate, window="hann")
+save_spectrum(samples, sample_rate, "outputs/hann.png", window="hann")
+```
+
+`window=None` remains the default. Hann multiplies the samples by a smooth
+taper before the DFT; division by the sum of the weights compensates for its
+amplitude loss. The input is unchanged. It reduces distant leakage while
+broadening the main peak, and cannot fully recover off-bin tone amplitudes.
+
+Compare 220 Hz (aligned with a bin) and 230 Hz (between bins):
+
+```sh
+python examples/windowing.py
+```
+
+Each run saves a comparison image and window-shape image under a new
+`outputs/windowing/<run-id>/` directory, plus a numeric observation report in
+`evals/results/windowing-<run-id>.json`. The comparison uses fixed axes and both
+linear amplitude and dB relative to amplitude 1; its displayed dB floor does not
+change the calculated spectrum. See [DSP notes](docs/math.md) for the formula.
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 
