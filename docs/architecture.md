@@ -2,7 +2,7 @@
 
 AutoDJ will analyze, sequence, and mix locally supplied audio. The current
 implementation supports 16-bit PCM WAV loading, time selection, amplitude gain,
-WAV saving, waveform PNG export, and an educational direct DFT.
+WAV saving, waveform PNG export, an educational direct DFT, and spectrum PNG export.
 
 The intended flow is:
 
@@ -33,6 +33,9 @@ save one amplitude-versus-time plot per channel. It plots all samples on a fixed
 in `evals/results/`; generated audio stays in ignored `outputs/evals/` directories.
 `dsp/fourier.py` computes the direct DFT of a single-channel sequence using the
 standard library. It is intentionally O(N²) for learning on short signals.
+`dsp/spectrum.py` computes one-sided frequency/amplitude pairs for real input;
+`audio/spectrum.py` draws those values with Matplotlib. The numerical calculation
+is tested independently of rendering, including DC, Nyquist, and odd lengths.
 NumPy is declared explicitly for independent FFT comparisons in tests, examples,
 and `evals/dft.py`. Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data

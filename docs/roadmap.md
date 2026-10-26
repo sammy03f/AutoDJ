@@ -10,7 +10,8 @@
 - [x] Save repeatable synthetic audio evaluation results and listening examples.
 - [x] Visualize waveforms with separate channel plots and synthetic examples.
 - [x] Implement a small educational DFT and compare it with NumPy FFT.
-- [ ] Plot a frequency spectrum and explain bin spacing and amplitude scaling.
+- [x] Plot a frequency spectrum and explain bin spacing and amplitude scaling.
+- [ ] Explore spectral leakage and windowing.
 - [ ] Generate an STFT and spectrogram.
 
 Completed first component: a standard-library WAV loader for uncompressed
@@ -27,7 +28,10 @@ scale. `examples/waveforms.py` illustrates attenuation, clipping, and stereo.
 `dsp/fourier.py` now implements the direct DFT, with known-answer tests and a
 NumPy FFT comparison. `examples/dft.py` identifies two synthetic tones;
 `evals/dft.py` saves numerical comparison reports.
-Next small task: plot a frequency spectrum before progressing to STFT.
+`dsp/spectrum.py` converts the DFT to a one-sided amplitude spectrum, and
+`audio/spectrum.py` saves the plot. `examples/spectrum.py` shows the expected
+220 Hz and 440 Hz peaks with amplitudes 1 and 0.5.
+Next small task: spectral leakage and windowing before progressing to STFT.
 
 ## Subsequent milestones
 

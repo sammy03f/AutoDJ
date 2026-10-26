@@ -44,7 +44,8 @@ The first audio component loads uncompressed 16-bit PCM WAV files and exposes
 their sample rate, channels, duration, and integer samples. Time ranges can be
 selected from loaded audio, adjusted in amplitude, saved as WAV, and plotted
 as waveform images. A small educational DFT now extracts frequency coefficients
-and is checked against NumPy's FFT. Next: frequency spectrum visualization.
+and is checked against NumPy's FFT. Frequency spectrum PNGs show the amplitudes
+of those components. Next: spectral leakage and windowing before STFT.
 
 ## Development
 
@@ -171,6 +172,36 @@ python evals/dft.py --label "Initial DFT baseline"
 
 The example finds 220 Hz and 440 Hz tones with amplitudes 1 and 0.5. Evaluation
 reports are retained under `evals/results/dft-*.json`.
+
+Save a frequency spectrum for a short, single-channel sequence:
+
+```python
+from autodj.audio import save_spectrum
+
+save_spectrum([0, 1, 0, -1], 8000, "outputs/spectrum.png")
+```
+
+This example has a 2000 Hz peak of amplitude 1. For loaded audio, use
+`save_spectrum([frame[0] for frame in audio.samples[:256]], audio.sample_rate,
+"outputs/spectrum.png")`. Samples must be nonempty, finite, and real.
+The parent directory must exist; an existing PNG is overwritten.
+
+The plot shows nonnegative frequencies through Nyquist in Hz and amplitude in
+the input's units (PCM values stay in PCM units). It scales DFT magnitudes to
+recover bin-centered sinusoid amplitudes, treating DC and Nyquist separately.
+Off-bin tones spread across bins, so their tallest bin may underestimate their
+amplitude. The display auto-scales vertically; read the axis values when comparing
+images. This still uses our O(N²) DFT, so keep inputs short.
+
+Generate the two-tone image, with peaks at 220 Hz and 440 Hz:
+
+```sh
+python examples/spectrum.py
+```
+
+Open `outputs/spectra/two_tones.png`. For numeric results without plotting, use
+`frequencies, amplitudes = amplitude_spectrum(samples, sample_rate)` from
+`autodj.dsp`.
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 

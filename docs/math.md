@@ -77,6 +77,26 @@ with NumPy on real and complex signals, including odd lengths.
 
 Reference convention: [NumPy's DFT documentation](https://numpy.org/doc/stable/reference/routines.fft.html).
 
+## From DFT coefficients to a spectrum plot
+
+`amplitude_spectrum(samples, sample_rate)` returns frequencies and amplitudes
+for bins 0 through N//2. For real input, the negative-frequency bins carry
+conjugate copies, so we combine their magnitudes into the positive side.
+The amplitude multiplier is 2/N except for DC and the even-N Nyquist bin,
+where it is 1/N. With odd N there is no Nyquist bin: the last retained bin
+still has a partner and must be doubled. With N=1, only DC remains.
+
+Worked example: at 1760 Hz with N=64, frequency spacing is 27.5 Hz.
+A unit-amplitude 220 Hz sine gives |X[8]|=32, so its plotted amplitude is
+2*32/64=1. A 440 Hz sine of amplitude 0.5 gives |X[16]|=16, so its plotted
+amplitude is 2*16/64=0.5. These are linear amplitudes, not power or decibels.
+Raw PCM input retains PCM amplitude units; it is not scaled to [-1, 1].
+
+The plot draws a vertical line at each discrete frequency bin and auto-scales
+the vertical display range. It does not normalize peaks, add frequency bins,
+or apply a window. Exact tone amplitudes in this example rely on frequencies
+lining up with bins. Next we will examine leakage when that assumption fails.
+
 ## Future notes
 
 For each new algorithm, document:
