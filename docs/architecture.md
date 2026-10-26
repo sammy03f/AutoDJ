@@ -2,7 +2,7 @@
 
 AutoDJ will analyze, sequence, and mix locally supplied audio. The current
 implementation supports 16-bit PCM WAV loading, time selection, amplitude gain,
-WAV saving, and waveform PNG export.
+WAV saving, waveform PNG export, and an educational direct DFT.
 
 The intended flow is:
 
@@ -31,7 +31,10 @@ save one amplitude-versus-time plot per channel. It plots all samples on a fixed
 16-bit PCM scale; this first version is intended for short clips.
 `evals/audio_io.py` runs fixed synthetic cases and retains JSON reports
 in `evals/results/`; generated audio stays in ignored `outputs/evals/` directories.
-Introduce analysis, DSP, transitions, sequencing, and ML modules only as their
+`dsp/fourier.py` computes the direct DFT of a single-channel sequence using the
+standard library. It is intentionally O(N²) for learning on short signals.
+NumPy is declared explicitly for independent FFT comparisons in tests, examples,
+and `evals/dft.py`. Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,
 used for drawing plots; PCM loading, editing, and saving use the standard library.

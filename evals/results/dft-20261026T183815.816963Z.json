@@ -1,0 +1,92 @@
+{
+  "suite": "dft",
+  "suite_version": 1,
+  "run_id": "20261026T183815.816963Z",
+  "created_at_utc": "2026-10-26T18:38:15.816963+00:00",
+  "label": "Initial direct DFT baseline",
+  "git_commit": "5978746ebd98153e8d6a4d26916712e507f20a05",
+  "working_tree_dirty": true,
+  "source_sha256": {
+    "src/autodj/dsp/__init__.py": "f4e787d64cd3769088bcf58872394208027ccef76ea4e1da92a8f1d5b186c306",
+    "src/autodj/dsp/fourier.py": "bf7d2fae4253de580ae0052369d53c219e4e7d694d8183278fdc9c710df1a099",
+    "evals/dft.py": "f2da9d8141ef8c32d16b8a6de7a2ba541fb6fd162d045f80e7b5287d1b694d3a"
+  },
+  "python": "3.14.7",
+  "numpy": "2.5.4",
+  "platform": "macOS-14.5-arm64-arm-64bit-Mach-O",
+  "atol": 1e-08,
+  "rtol": 1e-10,
+  "passed": true,
+  "cases": [
+    {
+      "name": "silence",
+      "sample_count": 32,
+      "input_sha256": "40ce4d358c8b78bb5c0c9125d719da65a6b6adcb04abea6edb6512ce248937b9",
+      "passed": true,
+      "dft_seconds": 0.00026462506502866745,
+      "fft_seconds": 0.0009938748553395271,
+      "max_absolute_error": 0.0,
+      "rms_error": 0.0
+    },
+    {
+      "name": "constant",
+      "sample_count": 32,
+      "input_sha256": "37c07fba6677b3c82f25ccafc921ce250c0d2862b90c5956f6e0a4398cd44417",
+      "passed": true,
+      "dft_seconds": 0.00025145895779132843,
+      "fft_seconds": 1.5124911442399025e-05,
+      "max_absolute_error": 1.390538272148542e-13,
+      "rms_error": 4.3847196777690866e-14
+    },
+    {
+      "name": "shifted_impulse",
+      "sample_count": 32,
+      "input_sha256": "efcd88f3bda2803331ab0b0b617f9a226f4d8c68d7493f2f6ae2351667100d98",
+      "passed": true,
+      "dft_seconds": 0.0002432079054415226,
+      "fft_seconds": 1.1125113815069199e-05,
+      "max_absolute_error": 6.497413668604471e-16,
+      "rms_error": 2.54201242018502e-16
+    },
+    {
+      "name": "nyquist",
+      "sample_count": 32,
+      "input_sha256": "19670f7d988b6fbfb625eae45afb32be65db1c166997a4c9cbf3e7185053e8ff",
+      "passed": true,
+      "dft_seconds": 0.00024445890448987484,
+      "fft_seconds": 9.709037840366364e-06,
+      "max_absolute_error": 7.140062227411022e-14,
+      "rms_error": 2.713980233953765e-14
+    },
+    {
+      "name": "two_tones",
+      "sample_count": 64,
+      "input_sha256": "03ad237506a46ada134654bb15421daadeadf5a162a177e04b4aa5ef01ffa7d9",
+      "passed": true,
+      "dft_seconds": 0.0009357091039419174,
+      "fft_seconds": 1.587485894560814e-05,
+      "max_absolute_error": 2.2811323946036794e-13,
+      "rms_error": 6.092231651464356e-14
+    },
+    {
+      "name": "complex_prime_length",
+      "sample_count": 31,
+      "input_sha256": "910203eb9769c3c3aa9ad76526772c25cabc0fbe7c06fe439ecb30215ce04254",
+      "passed": true,
+      "dft_seconds": 0.0002282499335706234,
+      "fft_seconds": 1.35831069201231e-05,
+      "max_absolute_error": 5.741026739997604e-14,
+      "rms_error": 2.353147839420167e-14
+    },
+    {
+      "name": "pcm_off_bin",
+      "sample_count": 64,
+      "input_sha256": "d7ea3afa8322db3759a446045c3c138e064c44f651df4e4c2719d02e6cdf90ce",
+      "passed": true,
+      "dft_seconds": 0.000971208093687892,
+      "fft_seconds": 1.037493348121643e-05,
+      "max_absolute_error": 1.4426613703008734e-08,
+      "rms_error": 2.202485434651353e-09
+    }
+  ]
+}

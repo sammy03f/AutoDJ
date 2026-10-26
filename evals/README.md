@@ -40,3 +40,27 @@ Listen to `mono_440hz_output.wav`, `stereo_440hz_660hz_output.wav`,
 `select_and_half_gain_output.wav`, and `gain_clipping_output.wav` to compare the
 examples. PCM-limit and empty fixtures check correctness, not listening quality.
 These evaluations establish numerical correctness, not perceived musical quality.
+
+## Direct DFT versus FFT
+
+With the project environment activated, run:
+
+```sh
+python evals/dft.py --label "Initial DFT baseline"
+```
+
+Seven fixed cases cover silence, DC, a shifted impulse, Nyquist, two tones,
+a complex tone of prime length, and a PCM-scale off-bin tone. Reports are saved
+as `evals/results/dft-<run-id>.json`; each run preserves earlier results and exits
+with status 1 on failure. Compare cases by name, suite version, and input hash.
+
+`max_absolute_error` and `rms_error` measure complex-coefficient differences
+from NumPy FFT. A case passes when every bin meets
+`abs(actual - reference) <= atol + rtol*abs(reference)`, using atol=1e-8 and
+rtol=1e-10. Small nonzero errors are expected from floating-point arithmetic.
+Nonfinite output or an incorrect output length fails the case.
+
+Reports retain source hashes, Git state, environment versions, and single-call
+DFT/FFT timings. These small timings include conversion overhead and are
+diagnostic only; do not treat a one-run timing difference as a performance
+regression. Known-answer unit tests separately verify the transform convention.

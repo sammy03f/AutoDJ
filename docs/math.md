@@ -36,6 +36,47 @@ Connecting lines are visual guides between discrete samples, not a reconstructio
 of the continuous sound. Short excerpts show individual oscillations clearly.
 An extracted clip starts at time zero; it does not retain its original offset.
 
+## Discrete Fourier transform (DFT)
+
+The waveform tells us how amplitude changes with time. The DFT describes a
+finite sequence using N equally spaced frequency bins:
+
+```text
+X[k] = sum over n=0,...,N-1 of x[n] * exp(-2*pi*i*k*n/N)
+```
+
+Here x[n] is a sample, N is the sample count, k is the frequency-bin index,
+and i is the imaginary unit (written `1j` in Python). Euler's identity,
+`exp(i*theta) = cos(theta) + i*sin(theta)`, lets one complex coefficient
+capture both cosine and sine contributions. Its magnitude `abs(X[k])` measures
+strength; its angle describes phase. Phase is not meaningful at zero magnitude.
+
+For example, `[0, 1, 0, -1]` is one sine cycle in four samples. Its DFT is
+approximately `[0, -2j, 0, 2j]`. The first bin is DC (the sum of the samples),
+and the two nonzero bins represent the positive and negative frequency pair.
+Tiny residuals near zero are normal floating-point roundoff.
+
+With sample rate Fs, bin spacing is Fs/N Hz. Positive-frequency bin k represents
+k*Fs/N Hz. For N=64 at Fs=1760 Hz, bins 8 and 16 are 220 and 440 Hz.
+The bins beyond the positive-frequency region represent negative frequencies:
+their frequency is (k-N)*Fs/N. For even N, bin N/2 is the Nyquist frequency,
+Fs/2, shared by the positive and negative interpretations. For odd N, the last
+positive bin is (N-1)/2. Real signals have conjugate positive/negative pairs.
+
+Our forward transform is unnormalized. For a real sinusoid exactly aligned
+with a bin, amplitude is `2*abs(X[k])/N` in the positive-frequency region.
+DC and the even-N Nyquist bin use `abs(X[k])/N` without doubling. Frequencies
+between bins spread across multiple bins (spectral leakage); we will study
+windows later. This first implementation applies no window or zero padding.
+
+`dft` uses two explicit loops: N output bins times N input samples, or O(N²)
+work. FFT algorithms compute the same DFT in O(N log N) work. Our implementation
+uses the standard library; NumPy provides the independent FFT comparison.
+Known-answer tests check magnitude, phase, and normalization before comparison
+with NumPy on real and complex signals, including odd lengths.
+
+Reference convention: [NumPy's DFT documentation](https://numpy.org/doc/stable/reference/routines.fft.html).
+
 ## Future notes
 
 For each new algorithm, document:

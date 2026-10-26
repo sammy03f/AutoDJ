@@ -9,7 +9,8 @@
 - [x] Save audio as WAV.
 - [x] Save repeatable synthetic audio evaluation results and listening examples.
 - [x] Visualize waveforms with separate channel plots and synthetic examples.
-- [ ] Implement a small educational DFT and compare it with NumPy FFT.
+- [x] Implement a small educational DFT and compare it with NumPy FFT.
+- [ ] Plot a frequency spectrum and explain bin spacing and amplitude scaling.
 - [ ] Generate an STFT and spectrogram.
 
 Completed first component: a standard-library WAV loader for uncompressed
@@ -23,7 +24,10 @@ load → select → gain → save workflow. Synthetic evaluations retain JSON re
 and local listening examples; see [evaluation history](../evals/README.md).
 Waveform PNGs now show each channel against time using a fixed PCM amplitude
 scale. `examples/waveforms.py` illustrates attenuation, clipping, and stereo.
-Next small task: implement a small educational DFT to introduce frequency analysis.
+`dsp/fourier.py` now implements the direct DFT, with known-answer tests and a
+NumPy FFT comparison. `examples/dft.py` identifies two synthetic tones;
+`evals/dft.py` saves numerical comparison reports.
+Next small task: plot a frequency spectrum before progressing to STFT.
 
 ## Subsequent milestones
 

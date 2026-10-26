@@ -43,7 +43,8 @@ Early development
 The first audio component loads uncompressed 16-bit PCM WAV files and exposes
 their sample rate, channels, duration, and integer samples. Time ranges can be
 selected from loaded audio, adjusted in amplitude, saved as WAV, and plotted
-as waveform images. Next: an educational DFT and frequency analysis.
+as waveform images. A small educational DFT now extracts frequency coefficients
+and is checked against NumPy's FFT. Next: frequency spectrum visualization.
 
 ## Development
 
@@ -56,8 +57,9 @@ python -m pip install -e .
 python -c "import autodj; print(autodj.__file__)"
 ```
 
-Matplotlib draws waveform images. The install command above installs it and
-its dependencies. Run the tests from the activated virtual environment with:
+Matplotlib draws waveform images; NumPy provides our FFT reference. The install
+command above installs these dependencies. Run the tests from the activated
+virtual environment with:
 
 ```sh
 python -m unittest discover -s tests -v
@@ -144,6 +146,31 @@ python examples/waveforms.py
 
 Open the PNGs in `outputs/waveforms/` side by side to compare them. Rerunning
 the example replaces these images.
+
+Try the educational DFT on a tiny single-channel signal:
+
+```python
+from autodj.dsp import dft
+
+spectrum = dft([0, 1, 0, -1])
+print(spectrum)  # Approximately (0, -2j, 0, 2j).
+```
+
+For loaded audio, select one channel explicitly, for example
+`dft([frame[0] for frame in audio.samples[:64]])`. This direct implementation
+does O(N²) work: use tiny excerpts, not entire tracks. Output is unnormalized
+complex coefficients, including negative-frequency bins. Empty or nonfinite
+inputs raise `ValueError`. See [DSP notes](docs/math.md) for the formula and scaling.
+
+Run the two-tone example and save a repeatable FFT comparison report:
+
+```sh
+python examples/dft.py
+python evals/dft.py --label "Initial DFT baseline"
+```
+
+The example finds 220 Hz and 440 Hz tones with amplitudes 1 and 0.5. Evaluation
+reports are retained under `evals/results/dft-*.json`.
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 
