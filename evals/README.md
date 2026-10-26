@@ -78,3 +78,18 @@ The latter measures the largest amplitude strictly more than 55 Hz from the
 known tone, excluding the wider main lobe. It is not total leakage energy.
 The reports retain source hashes, environment versions, and diagnostic single-call
 timings. Do not treat small timing changes as performance regressions.
+
+## STFT tone-switch check
+
+`python examples/stft.py` retains a timestamped `evals/results/stft-*.json`
+report and the input/output arrays in `outputs/stft/<run-id>/tone_switch.npz`.
+The fixture switches from 64 Hz to 192 Hz at 0.25 seconds. It uses 64-sample
+Hann frames with a 32-sample hop at 1024 Hz (15 frames, 33 bins).
+
+A run passes when complex coefficients match an independently framed direct-DFT
+reference within atol=rtol=1e-10, start timestamps match, and the wholly contained
+frames identify the right tone. The frame spanning the switch is included in
+the DFT comparison but excluded from the pure-tone peak checks. The script exits
+with status 1 on a failed comparison. Reports record source fingerprints and
+environment versions; compare matching suite versions. Full boundary and
+amplitude checks are in `tests/test_stft.py`.

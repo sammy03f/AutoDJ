@@ -46,7 +46,7 @@ selected from loaded audio, adjusted in amplitude, saved as WAV, and plotted
 as waveform images. A small educational DFT now extracts frequency coefficients
 and is checked against NumPy's FFT. Frequency spectrum PNGs show the amplitudes
 of those components, with optional Hann windowing to reduce distant leakage.
-Next: STFT, which follows frequency content over time.
+A numerical STFT follows frequency content over time. Next: spectrogram plotting.
 
 ## Development
 
@@ -229,6 +229,39 @@ Each run saves a comparison image and window-shape image under a new
 `evals/results/windowing-<run-id>.json`. The comparison uses fixed axes and both
 linear amplitude and dB relative to amplitude 1; its displayed dB floor does not
 change the calculated spectrum. See [DSP notes](docs/math.md) for the formula.
+
+Compute an STFT for one channel:
+
+```python
+from autodj.dsp import stft
+
+analysis = stft(
+    [frame[0] for frame in audio.samples], audio.sample_rate,
+    frame_size=1024, hop_size=256,
+)
+print(analysis.coefficients.shape)  # (number of frames, 513 frequency bins)
+print(analysis.times[:5])          # Frame START times in seconds.
+print(analysis.frequencies[:5])    # Frequency bins in Hz.
+```
+
+Each complete frame gets a periodic Hann window and an FFT. The hop controls
+how many samples the next frame advances; it must be between 1 and frame size.
+There is no centering or padding, and an incomplete final frame is omitted.
+Empty input or input shorter than one frame returns zero rows. The returned
+coefficients are raw complex values, preserving phase; they are not yet an
+amplitude plot. Inputs must be finite, real, and single-channel. This version
+keeps input and output in memory.
+
+Run the known tone-switch example:
+
+```sh
+python examples/stft.py
+```
+
+It tracks a switch from 64 Hz to 192 Hz at 0.25 seconds, checks against the
+direct DFT, and saves a timestamped JSON report under `evals/results/` plus
+NumPy arrays under `outputs/stft/`. The frame crossing the switch contains both
+tones. See [DSP notes](docs/math.md) for timing, shape, and amplitude conventions.
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 

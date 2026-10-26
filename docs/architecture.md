@@ -2,7 +2,8 @@
 
 AutoDJ will analyze, sequence, and mix locally supplied audio. The current
 implementation supports 16-bit PCM WAV loading, time selection, amplitude gain,
-WAV saving, waveform PNG export, an educational direct DFT, and spectrum PNG export.
+WAV saving, waveform PNG export, an educational direct DFT, spectrum PNG export,
+and numerical STFT analysis.
 
 The intended flow is:
 
@@ -39,8 +40,12 @@ is tested independently of rendering, including DC, Nyquist, and odd lengths.
 `dsp/windows.py` implements the periodic Hann formula without another dependency.
 The spectrum functions accept `window="hann"` and correct amplitude by dividing
 by the sum of the weights. Default rectangular-window behavior is preserved.
-NumPy is declared explicitly for independent FFT comparisons in tests, examples,
-and `evals/dft.py`. Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
+`dsp/stft.py` uses NumPy's real FFT per complete Hann-windowed frame. `StftResult`
+retains raw complex coefficients shaped (frames, bins), frame-start times,
+frequencies, framing settings, and window sum. It does not pad, center frames,
+or normalize magnitudes. The input and result reside in memory.
+NumPy now supplies STFT computation as well as independent FFT comparisons.
+Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,
 used for drawing plots; PCM loading, editing, and saving use the standard library.

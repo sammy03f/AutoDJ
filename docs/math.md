@@ -135,6 +135,42 @@ the wider Hann main lobe. This is a diagnostic for these fixtures, not total
 leaked energy or a general audio-quality score. Numeric outputs are not floored.
 Tests compare weights with NumPy and windowed spectra with an independent FFT.
 
+## Short-time Fourier transform (STFT)
+
+A single spectrum loses information about when frequencies occur. The STFT
+analyzes successive short segments. For frame length L, hop H, and frame index m:
+
+```text
+start_sample = m * H
+frame[n] = x[m*H + n] * w[n], n = 0,...,L-1
+X[m,k] = sum(frame[n] * exp(-2*pi*i*k*n/L))
+```
+
+We implement framing and reuse our periodic Hann; NumPy's real FFT computes
+the transform efficiently. For S input samples, the complete-frame count is
+`max(0, 1 + floor((S-L)/H))`. We require 1 <= H <= L. No padding or centering
+is applied. Coefficients have shape `(frame_count, L//2 + 1)`.
+
+The result's `times[m]` is m*H/Fs, the **start** of the frame. Its time support
+is [m*H/Fs, (m*H+L)/Fs), and its last sample occurs one sample interval before
+that end. Frequencies are k*Fs/L. For L=64, H=32, Fs=1024, frames last 0.0625 s,
+start every 0.03125 s, and bins are spaced 16 Hz apart. Longer frames offer
+finer bin spacing but mix events over a longer interval. Smaller hops give
+more time positions without changing the frame length or frequency spacing.
+
+The output is unnormalized complex coefficients, including phase. To obtain
+one-sided amplitudes later, divide abs(coefficients) by `window_sum` and double
+interior bins, excluding DC and the even-L Nyquist bin. Do not apply that
+doubling to the stored complex coefficients or confuse them with power.
+
+In our example, 512 samples switch from 64 Hz (amplitude 1) to 192 Hz
+(amplitude 0.5) at sample 256. There are 15 frames. Frame 7 starts at sample
+224 and spans both tones, so it should not be treated as a pure-tone frame.
+Tests check the pure frames separately and compare small frames against our
+direct DFT. Empty/short signals yield zero frames with the frequency axis intact.
+
+Reference: [NumPy real FFT conventions](https://numpy.org/doc/stable/reference/generated/numpy.fft.rfft.html).
+
 ## Future notes
 
 For each new algorithm, document:

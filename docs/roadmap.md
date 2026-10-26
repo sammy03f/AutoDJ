@@ -12,7 +12,8 @@
 - [x] Implement a small educational DFT and compare it with NumPy FFT.
 - [x] Plot a frequency spectrum and explain bin spacing and amplitude scaling.
 - [x] Explore spectral leakage and periodic Hann windowing with gain correction.
-- [ ] Generate an STFT and spectrogram.
+- [x] Compute an STFT with explicit frame timing and tone-switch tests.
+- [ ] Plot an STFT as a spectrogram.
 
 Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
@@ -34,7 +35,10 @@ NumPy FFT comparison. `examples/dft.py` identifies two synthetic tones;
 `dsp/windows.py` adds a periodic Hann taper. Spectra optionally use it with
 coherent-gain correction. `examples/windowing.py` compares 220/230 Hz tones and
 saves plots and numeric observations for later comparison.
-Next small task: STFT frames and their timestamps, before plotting a spectrogram.
+`dsp/stft.py` applies Hann and a real FFT to complete overlapping frames.
+It returns complex coefficients with frame-start times and frequency bins.
+`examples/stft.py` tracks a 64 Hz → 192 Hz switch and saves reference comparisons.
+Next small task: plot the STFT as a spectrogram.
 
 ## Subsequent milestones
 
