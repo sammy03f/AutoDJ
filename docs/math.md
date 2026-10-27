@@ -200,6 +200,50 @@ This explicit convention also works for one frame or one frequency bin.
 
 Rendering uses [Matplotlib's explicit-cell pcolormesh](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.pcolormesh.html).
 
+## Onset strength from spectral flux
+
+An onset is the beginning of a sound event. Before selecting onset times, we
+compute a curve describing increases in spectral magnitude:
+
+```text
+M[m,k] = abs(STFT[m,k])
+flux[0] = 0
+flux[m] = sum_k(max(0, M[m,k] - M[m-1,k]))
+```
+
+The first frame has no predecessor, so its strength is zero even if it contains
+a sound. Empty STFTs return an empty array. Magnitudes ignore phase, and clipping
+each difference at zero makes decreases contribute nothing. For example, a
+change from `[1, 4, 0]` to `[3, 1, 2]` gives `2 + 0 + 2 = 4`. Clipping must happen
+before summing; otherwise a decrease could cancel an increase in another bin.
+
+This baseline sums raw nonnegative-frequency FFT magnitudes, including DC and
+Nyquist. There is no bin doubling, window-gain correction, log compression,
+per-frame normalization, or smoothing. Multiplying audio by a constant gain
+multiplies flux by its absolute value. Frame size and hop also affect the result;
+the curve is not a probability and is not directly comparable across settings.
+
+`flux[m]` is aligned with the current frame's start time, just like our STFT.
+An event inside a window can affect a value labeled earlier than the event.
+There is no universal time correction here: onset timestamp selection will be
+a separate step. A strong spectral change need not be a new note; noise,
+frequency movement, and window boundary effects can also create increases.
+
+Our known-answer tests include two isolated impulses. For a 64-sample Hann
+window, each impulse contributes its windowed amplitude equally to all 33 FFT
+bins. With a 16-sample hop and the chosen impulse alignment, its window weight
+rises by 0.5 twice, producing two flux values of 16.5 for a unit impulse.
+This tests both strength and frame alignment without a second FFT implementation.
+
+The example uses damped 128 Hz bursts at 0.25, 0.75, and 1.25 seconds. The markers
+are ground truth, not selected peaks. Its scalar reference checks the vectorized
+calculation, while the tests establish known answers and behavior on silence,
+steady tones, phase changes, and falling magnitudes.
+
+Related reference: [librosa's onset-strength envelope](https://librosa.org/doc/0.10.2/generated/librosa.onset.onset_strength.html)
+also uses positive spectral differences, but its defaults use log-power Mel
+features and a mean aggregation. We do not claim numerical equivalence to those defaults.
+
 ## Future notes
 
 For each new algorithm, document:

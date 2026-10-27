@@ -47,7 +47,8 @@ as waveform images. A small educational DFT now extracts frequency coefficients
 and is checked against NumPy's FFT. Frequency spectrum PNGs show the amplitudes
 of those components, with optional Hann windowing to reduce distant leakage.
 A numerical STFT follows frequency content over time and can be saved as an
-amplitude spectrogram. Next: onset detection fundamentals.
+amplitude spectrogram. Spectral flux now measures positive spectral changes
+as a first onset-strength baseline. Next: select candidate onsets from that curve.
 
 ## Development
 
@@ -285,6 +286,32 @@ its underlying analysis window may extend farther. The right edge is the last
 frame start plus one hop, not necessarily the end of the audio. Frequency cells
 are centered on FFT bins, bounded by 0 Hz and Nyquist. Empty STFT results raise
 `ValueError`. Saving overwrites existing PNGs without opening a GUI.
+
+Compute an onset-strength curve from an STFT:
+
+```python
+from autodj.analysis import spectral_flux
+
+strength = spectral_flux(analysis)
+# strength[m] corresponds to analysis.times[m] (frame start).
+```
+
+This sums positive changes in linear FFT magnitude between consecutive frames.
+The first value is zero because there is no preceding frame. Empty STFTs return
+an empty curve. Input arrays are preserved. Values use raw FFT units and depend
+on signal gain, frame size, and hop size; they are not probabilities or detected
+onset times. No smoothing, thresholding, or tempo estimation is applied yet.
+
+Generate known bursts and plot their strength curve:
+
+```sh
+python examples/onsets.py
+```
+
+Each run retains a PNG and NumPy arrays in `outputs/onsets/<run-id>/` plus a JSON
+report in `evals/results/onsets-<run-id>.json`. Dashed lines mark the known burst
+starts, not detections. A frame can span a burst even when its start timestamp
+precedes it, so the curve may rise before those markers.
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 

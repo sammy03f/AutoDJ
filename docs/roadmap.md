@@ -14,7 +14,8 @@
 - [x] Explore spectral leakage and periodic Hann windowing with gain correction.
 - [x] Compute an STFT with explicit frame timing and tone-switch tests.
 - [x] Plot an STFT as an amplitude spectrogram.
-- [ ] Introduce onset detection using synthetic transients.
+- [x] Compute spectral-flux onset strength and test known synthetic transients.
+- [ ] Select candidate onset timestamps from the strength curve.
 
 Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
@@ -42,7 +43,11 @@ It returns complex coefficients with frame-start times and frequency bins.
 `audio/spectrogram.py` renders gain-corrected one-sided amplitudes in dB with
 explicit frame-start coordinates and a fixed reference. The STFT example saves
 a PNG alongside its arrays and report. The v0.1 audio-analysis foundation is in place.
-Next small task: onset detection fundamentals using synthetic transients.
+`analysis/onsets.py` sums positive frame-to-frame FFT magnitude changes without
+normalization or smoothing. `examples/onsets.py` plots known bursts and retains
+their curve, arrays, and validation report.
+Next small task: select candidate onset timestamps, with explicit peak-selection
+and timing rules. Tempo estimation follows later.
 
 ## Subsequent milestones
 

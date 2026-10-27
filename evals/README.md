@@ -100,3 +100,20 @@ version, and renderer source hash. The numerical suite and its pass/fail criteri
 remain unchanged. `tests/test_spectrogram.py` separately checks dB scaling,
 DC/Nyquist handling, array orientation, cell coordinates, silence, and PNG output.
 Compare numeric results rather than PNG byte hashes across Matplotlib versions.
+
+## Spectral-flux bursts
+
+`python examples/onsets.py` retains a plot and NumPy arrays under
+`outputs/onsets/<run-id>/` and an `evals/results/onsets-<run-id>.json` report.
+Three known damped-tone bursts start at 0.25, 0.75, and 1.25 seconds. Reports
+record fixture settings, source hashes, versions, and maximum strength in each
+known region. Those regions include current/previous frames overlapping a burst;
+they are not found by an onset detector.
+
+A run passes if the curve matches a scalar reference (atol=rtol=1e-10), stays
+nonnegative, responds within each known burst region, and is zero within 1e-12
+where both compared frames are silent. The scalar reference tests vectorization,
+not the algorithm independently; known-answer tests in `tests/test_onsets.py`
+verify the formula and exact impulse responses. Failure exits with status 1.
+Compare matching fixture/settings/suite versions. No precision, recall, timing
+accuracy, or BPM metric is claimed before onset timestamps are implemented.

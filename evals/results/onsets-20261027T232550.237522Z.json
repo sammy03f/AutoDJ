@@ -1,0 +1,56 @@
+{
+  "suite": "spectral_flux_bursts",
+  "suite_version": 1,
+  "created_at_utc": "2026-10-27T23:25:50.237522+00:00",
+  "passed": true,
+  "sample_rate": 2048,
+  "frame_size": 128,
+  "hop_size": 32,
+  "time_convention": "frame start",
+  "magnitude_scale": "raw FFT, no normalization",
+  "burst_size": 128,
+  "burst_frequency_hz": 128,
+  "decay_samples": 24,
+  "burst_gains": [
+    1,
+    0.6,
+    0.8
+  ],
+  "sample_count": 3072,
+  "frame_count": 93,
+  "max_reference_error": 2.1316282072803006e-14,
+  "atol": 1e-10,
+  "rtol": 1e-10,
+  "max_silent_strength": 0.0,
+  "silence_tolerance": 1e-12,
+  "observations": [
+    {
+      "known_start_seconds": 0.25,
+      "max_strength_in_known_region": 52.57025218548704
+    },
+    {
+      "known_start_seconds": 0.75,
+      "max_strength_in_known_region": 31.542151311292226
+    },
+    {
+      "known_start_seconds": 1.25,
+      "max_strength_in_known_region": 42.05620174838963
+    }
+  ],
+  "python": "3.14.7",
+  "numpy": "2.5.4",
+  "matplotlib": "3.11.2",
+  "platform": "macOS-14.5-arm64-arm-64bit-Mach-O",
+  "source_sha256": {
+    "src/autodj/dsp/__init__.py": "a21fdde2cd691a8be327aaa4c45d712a4cf98858a611d4a370196e17f40b3af9",
+    "src/autodj/dsp/fourier.py": "bf7d2fae4253de580ae0052369d53c219e4e7d694d8183278fdc9c710df1a099",
+    "src/autodj/dsp/spectrum.py": "d852fc4212224e3927063594fa42a6e329c2c56a0aad26d7691b0e47f33b1b27",
+    "src/autodj/dsp/stft.py": "ce3c01034bb49f398798c3302f5e4b6b1db625c3d1e52b28f84161bc747b703d",
+    "src/autodj/dsp/windows.py": "ad2f656f9b6ef15701cd27c36546bb7add4789d071c538a88125b0cefc4622ea",
+    "src/autodj/analysis/__init__.py": "6b62e9b950eaec6a371a057b7eaf43980ef034904baea03db31314badaf8f53a",
+    "src/autodj/analysis/onsets.py": "62d2c279db5a4927b4f2b0d1974f09aca8d2c7ed9c077a43e68f89169780a78c",
+    "examples/onsets.py": "e57dc652abc9baadf9d45f039d79b06d299ee5ca460e5dd433b639400d869a67"
+  },
+  "plot": "outputs/onsets/20261027T232550.237522Z/onset_strength.png",
+  "data": "outputs/onsets/20261027T232550.237522Z/bursts.npz"
+}
