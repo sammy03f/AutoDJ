@@ -225,8 +225,8 @@ the curve is not a probability and is not directly comparable across settings.
 
 `flux[m]` is aligned with the current frame's start time, just like our STFT.
 An event inside a window can affect a value labeled earlier than the event.
-There is no universal time correction here: onset timestamp selection will be
-a separate step. A strong spectral change need not be a new note; noise,
+There is no universal time correction here: onset timestamp selection is
+a separate step described below. A strong spectral change need not be a new note; noise,
 frequency movement, and window boundary effects can also create increases.
 
 Our known-answer tests include two isolated impulses. For a 64-sample Hann
@@ -236,13 +236,49 @@ rises by 0.5 twice, producing two flux values of 16.5 for a unit impulse.
 This tests both strength and frame alignment without a second FFT implementation.
 
 The example uses damped 128 Hz bursts at 0.25, 0.75, and 1.25 seconds. The markers
-are ground truth, not selected peaks. Its scalar reference checks the vectorized
+shown as dashed lines are ground truth; crosses now mark selected peaks.
+Its scalar reference checks the vectorized
 calculation, while the tests establish known answers and behavior on silence,
 steady tones, phase changes, and falling magnitudes.
 
 Related reference: [librosa's onset-strength envelope](https://librosa.org/doc/0.10.2/generated/librosa.onset.onset_strength.html)
 also uses positive spectral differences, but its defaults use log-power Mel
 features and a mean aggregation. We do not claim numerical equivalence to those defaults.
+
+## Peak picking and candidate onset times
+
+The strength curve has one value per frame; a peak picker decides which values
+are worth keeping. Our first picker uses an absolute threshold T and a minimum
+time interval D. Candidate peaks must be strictly greater than T and greater
+than the neighboring values on each side. A flat plateau counts once at its
+earliest frame, provided both neighboring regions are lower. Peaks touching
+the beginning or end of the curve are excluded because one side is unknown.
+
+We process candidates from strongest to weakest. Keep a candidate only if it
+is at least D seconds from every peak already kept. Ties favor the earlier
+frame, and the final output is sorted by time. Equality at D is allowed, with
+1e-12 relative tolerance for floating-point roundoff. This greedy offline rule
+can choose one strong middle peak instead of two weaker outer peaks; it does
+not maximize a global score and needs O(P²) work for P candidate peaks.
+
+For `[0, 3, 0, 5, 0]`, both internal peaks qualify when T=2. If their times
+are too close, the later height-5 peak suppresses the height-3 peak. Thresholds
+must be adjusted for signal gain and STFT configuration because flux is raw.
+There is no adaptive baseline, smoothing, or backtracking in this version.
+
+With threshold 10 and minimum interval 0.1 s, our known bursts yield frame
+indices 14, 46, 78, corresponding to 0.21875, 0.71875, 1.21875 s. Ground truth
+is 0.25, 0.75, 1.25 s. Each signed error (candidate minus truth) is -0.03125 s.
+Picking the correct flux maximum therefore does not guarantee precise onset
+timing. No automatic window-center adjustment is made; refining the timing
+requires tests with different transient shapes and positions within frames.
+
+The example pairs each chronological candidate with the nearest unmatched
+ground-truth event within two hops (31.25 ms). The fixture's widely spaced
+events make that association unambiguous. Unmatched candidates count as false
+positives; unmatched events count as misses. Report precision/recall together
+with the tolerance and signed/absolute errors: passing within tolerance is not
+zero error, and a three-burst fixture is not evidence of general music accuracy.
 
 ## Future notes
 

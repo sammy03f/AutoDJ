@@ -110,10 +110,24 @@ record fixture settings, source hashes, versions, and maximum strength in each
 known region. Those regions include current/previous frames overlapping a burst;
 they are not found by an onset detector.
 
-A run passes if the curve matches a scalar reference (atol=rtol=1e-10), stays
+The curve checks pass if it matches a scalar reference (atol=rtol=1e-10), stays
 nonnegative, responds within each known burst region, and is zero within 1e-12
 where both compared frames are silent. The scalar reference tests vectorization,
 not the algorithm independently; known-answer tests in `tests/test_onsets.py`
-verify the formula and exact impulse responses. Failure exits with status 1.
-Compare matching fixture/settings/suite versions. No precision, recall, timing
-accuracy, or BPM metric is claimed before onset timestamps are implemented.
+verify the formula and exact impulse responses.
+
+Suite version 2 adds peak picking with threshold 10 and minimum interval 0.1 s.
+The plot marks selected candidates, and the arrays retain their indices/times.
+Chronological candidates are paired one-to-one with the nearest unmatched known
+event within 31.25 ms (two hops). Reports include extra/missed events, precision,
+recall, and signed/absolute timing error. Unmatched candidates or missed events
+make the run fail, even if the flux calculation passed. Failure exits with status 1.
+The current fixture has three matches and no extras, with every estimate 31.25 ms
+early. This is a frame-start baseline; no correction is applied before scoring.
+The tolerance is part of the metric, not a claim of exact timing or performance
+on real music. Empty matches produce null timing-error summaries.
+
+Compare matching fixture/settings/suite versions. Version 1 reports remain
+valid records of strength-only evaluation; they contain no peak metrics. Peak
+rule tests (silence, boundaries, plateaus, thresholds, ties, and close events)
+are in `tests/test_peak_picking.py`. BPM evaluation is still future work.

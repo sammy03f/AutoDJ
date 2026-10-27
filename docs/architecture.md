@@ -3,7 +3,8 @@
 AutoDJ will analyze, sequence, and mix locally supplied audio. The current
 implementation supports 16-bit PCM WAV loading, time selection, amplitude gain,
 WAV saving, waveform PNG export, an educational direct DFT, spectrum PNG export,
-numerical STFT analysis, amplitude spectrogram PNGs, and spectral-flux onset strength.
+numerical STFT analysis, amplitude spectrogram PNGs, spectral-flux onset strength,
+and candidate onset peak picking.
 
 The intended flow is:
 
@@ -52,7 +53,10 @@ NumPy now supplies STFT computation as well as independent FFT comparisons.
 `analysis/onsets.py` consumes `StftResult` and returns one spectral-flux value per
 frame. It uses raw linear magnitudes, ignores decreases, and preserves STFT
 frame-start alignment. Plotting and synthetic fixture generation live in
-`examples/onsets.py`; the analysis function does not choose peaks or estimate BPM.
+`examples/onsets.py`. A separate `pick_onsets` function takes strength and times,
+applies an absolute threshold and local-maximum rule, then suppresses close peaks
+in descending strength order. `OnsetCandidates` holds frame indices and unchanged
+timestamps. This offline greedy baseline does not estimate BPM or refine timing.
 Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,

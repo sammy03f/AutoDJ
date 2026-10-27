@@ -15,7 +15,8 @@
 - [x] Compute an STFT with explicit frame timing and tone-switch tests.
 - [x] Plot an STFT as an amplitude spectrogram.
 - [x] Compute spectral-flux onset strength and test known synthetic transients.
-- [ ] Select candidate onset timestamps from the strength curve.
+- [x] Select candidate onset timestamps with explicit peak and spacing rules.
+- [ ] Refine and evaluate onset timing before tempo estimation.
 
 Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
@@ -46,8 +47,11 @@ a PNG alongside its arrays and report. The v0.1 audio-analysis foundation is in 
 `analysis/onsets.py` sums positive frame-to-frame FFT magnitude changes without
 normalization or smoothing. `examples/onsets.py` plots known bursts and retains
 their curve, arrays, and validation report.
-Next small task: select candidate onset timestamps, with explicit peak-selection
-and timing rules. Tempo estimation follows later.
+`pick_onsets` now selects local maxima above an absolute threshold and suppresses
+nearby weaker peaks. The burst example reports candidate frame starts, one-to-one
+matches, and timing error; this baseline is 31.25 ms early on the current fixture.
+Next small task: refine and evaluate onset timing on varied transient alignments.
+Tempo estimation follows later.
 
 ## Subsequent milestones
 

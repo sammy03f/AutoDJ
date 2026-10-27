@@ -48,7 +48,8 @@ and is checked against NumPy's FFT. Frequency spectrum PNGs show the amplitudes
 of those components, with optional Hann windowing to reduce distant leakage.
 A numerical STFT follows frequency content over time and can be saved as an
 amplitude spectrogram. Spectral flux now measures positive spectral changes
-as a first onset-strength baseline. Next: select candidate onsets from that curve.
+as a first onset-strength baseline, with thresholded peak picking for candidate
+onsets. Next: refine and evaluate onset timing before tempo estimation.
 
 ## Development
 
@@ -300,7 +301,24 @@ This sums positive changes in linear FFT magnitude between consecutive frames.
 The first value is zero because there is no preceding frame. Empty STFTs return
 an empty curve. Input arrays are preserved. Values use raw FFT units and depend
 on signal gain, frame size, and hop size; they are not probabilities or detected
-onset times. No smoothing, thresholding, or tempo estimation is applied yet.
+onset times. The strength calculation does not smooth or threshold the curve.
+
+Select candidate peaks with explicit settings:
+
+```python
+from autodj.analysis import pick_onsets
+
+candidates = pick_onsets(strength, analysis.times, threshold=10, min_interval=0.1)
+print(candidates.frame_indices)
+print(candidates.times)  # Uncorrected frame-start estimates, in seconds.
+```
+
+These settings are for the synthetic example, not universal music defaults.
+Peaks must be strictly above the threshold and have lower neighbors on both
+sides. Flat tops use their earliest frame; boundary peaks are excluded. When
+peaks are closer than `min_interval` seconds, the stronger wins; ties favor the
+earlier one. Accepted peaks return in time order. Exactly the minimum interval
+is allowed. The picker preserves the supplied timestamps without correction.
 
 Generate known bursts and plot their strength curve:
 
@@ -309,9 +327,12 @@ python examples/onsets.py
 ```
 
 Each run retains a PNG and NumPy arrays in `outputs/onsets/<run-id>/` plus a JSON
-report in `evals/results/onsets-<run-id>.json`. Dashed lines mark the known burst
-starts, not detections. A frame can span a burst even when its start timestamp
-precedes it, so the curve may rise before those markers.
+report in `evals/results/onsets-<run-id>.json`. Dashed lines mark known burst
+starts; crosses mark selected candidates. A frame can span a burst even when
+its start precedes it. With this fixture, candidates occur 31.25 ms early.
+Suite version 2 reports one-to-one matches, misses, extra candidates, and signed
+timing error using a declared 31.25 ms tolerance. This evaluates the synthetic
+baseline, not real-music accuracy.
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 
