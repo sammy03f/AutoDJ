@@ -280,6 +280,46 @@ positives; unmatched events count as misses. Report precision/recall together
 with the tolerance and signed/absolute errors: passing within tolerance is not
 zero error, and a three-burst fixture is not evidence of general music accuracy.
 
+## Evaluating frame-center timestamps
+
+A possible timing estimate is `frame_start + frame_size / (2*sample_rate)`.
+This is the midpoint of the frame's time interval, not the midpoint between
+its first and last sampled timestamps (which differs by half a sample).
+We compare it with the existing start label using the same flux and peak rules.
+The experiment checks that adding this constant does not change peak selection.
+
+The fixed suite uses Fs=2048 Hz, frame lengths 64/128/256, and hops L/8, L/4,
+and L/2. Each configuration places a single event at offsets 0, H/4, H/2,
+and H-1 within the hop. There are three event shapes: a one-sample click, a
+sharp damped 128 Hz burst, and a 128 Hz burst whose amplitude rises over 64
+samples. The first nonzero sample is the known onset. All events have silent
+padding before/after them; these are isolated events, not overlapping music.
+
+Threshold 10 and minimum spacing 0.1 s are fixed before the sweep. We report
+timing error only when exactly one candidate exists, without rejecting large
+errors. Zero and multiple detections remain visible as separate counts. Scores
+within 5/10/20/50 ms use all 108 event cases in their denominator, so misses
+cannot disappear from the accuracy summary.
+
+Initial mean absolute errors, conditional on one candidate:
+
+| Signal | Paired cases | Frame start | Frame center |
+| --- | --- | --- | --- |
+| Click | 36/36 | 47.92 ms | 11.54 ms |
+| Sharp burst | 36/36 | 43.36 ms | 7.07 ms |
+| Slower attack | 28/36 | 27.64 ms | 16.24 ms |
+
+Across the 100 paired cases, center labeling improves 84, worsens 12, and ties
+4. All worsened cases have slower attacks. Eight slow-attack cases are missed
+at the fixed threshold; there are no multiple-candidate cases. Eighteen silence
+and steady-tone controls produce no candidates.
+
+The shift fixes the original aligned sharp-burst example exactly, but that
+does not make it a universal onset correction. With slower attacks, the largest
+spectral increase may occur later in the envelope; shifting its frame label
+forward can overshoot the beginning. We retain the existing public defaults
+and will compare signal-based timing refinement before choosing a correction.
+
 ## Future notes
 
 For each new algorithm, document:

@@ -57,6 +57,9 @@ frame-start alignment. Plotting and synthetic fixture generation live in
 applies an absolute threshold and local-maximum rule, then suppresses close peaks
 in descending strength order. `OnsetCandidates` holds frame indices and unchanged
 timestamps. This offline greedy baseline does not estimate BPM or refine timing.
+`evals/onset_timing.py` independently studies frame-start versus frame-center
+labels while checking that the selected peaks stay the same. Its synthetic
+sweep, reports, and comparison plot do not change the public timing convention.
 Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,

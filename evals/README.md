@@ -131,3 +131,41 @@ Compare matching fixture/settings/suite versions. Version 1 reports remain
 valid records of strength-only evaluation; they contain no peak metrics. Peak
 rule tests (silence, boundaries, plateaus, thresholds, ties, and close events)
 are in `tests/test_peak_picking.py`. BPM evaluation is still future work.
+
+## Frame-start versus frame-center timing
+
+Run `python evals/onset_timing.py --label "Timing baseline"` from the activated
+project environment. It saves a timestamped report under
+`evals/results/onset-timing-*.json` and a PNG under `outputs/onset_timing/`.
+Reports retain source fingerprints, Git state, versions, settings, and per-case
+input hashes. Earlier reports and images are preserved.
+
+The fixed suite has 108 positive cases: 3 shapes × 3 frame lengths × 3 hop
+ratios × 4 within-hop offsets. Signals are 1536 samples at 2048 Hz; frames are
+64/128/256 samples, hops are L/8, L/4, L/2, and offsets are 0, H/4, H/2, H-1.
+Shapes are a click, a sharp decaying cosine, and a cosine with a slower attack.
+The first nonzero sample is ground truth. Constants and formulas live in the
+script and are covered by fixture tests. Threshold 10 and minimum interval
+0.1 s are held fixed. An additional 18 silence/steady-tone controls are checked.
+
+Frame center is start + L/(2*Fs). Peak selection is run with each time convention
+to check that indices do not change. Errors are candidate minus known onset.
+Only cases with exactly one candidate receive paired timing errors, without
+a matching tolerance gate. Missing/multiple cases have null errors, never zero.
+Reports include their counts, signed/absolute/max errors, cases that improve or
+worsen, and within-tolerance counts with all positive cases in the denominator.
+The multiple-candidate category is excluded from timing comparisons rather than
+choosing whichever candidate is closest to ground truth.
+
+Initial findings: 100/108 paired cases, 8 misses, no multiple detections, and no
+false candidates in the controls. Center labeling reduces paired mean absolute
+error from 40.60 to 11.25 ms, but worsens 12 slow-attack cases. These findings
+support an experimental alternative, not a general accuracy guarantee or a
+change to the default timestamps. The sweep does not cover every phase, sample
+rate, gain, noise condition, or polyphonic signal.
+
+Exit status checks selection invariance and negative controls only. A passing
+run does **not** mean every event was detected or frame center always improved
+timing. Compare matching suite/settings and inspect failures alongside error
+averages. Tests in `tests/test_onset_timing_eval.py` verify shift conventions,
+fixture starts, null errors for misses, and summary denominators.

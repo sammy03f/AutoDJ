@@ -334,6 +334,22 @@ Suite version 2 reports one-to-one matches, misses, extra candidates, and signed
 timing error using a declared 31.25 ms tolerance. This evaluates the synthetic
 baseline, not real-music accuracy.
 
+Compare frame-start and frame-center onset timing across varied synthetic cases:
+
+```sh
+python evals/onset_timing.py --label "Timing baseline"
+```
+
+The evaluation covers clicks, sharp bursts, and slower attacks across three
+frame sizes, three hop ratios, and four event offsets. Each run retains a report
+in `evals/results/onset-timing-*.json` and a plot in `outputs/onset_timing/`.
+On the initial 108-case sweep, 100 cases produced one candidate and 8 produced
+none. For those 100 paired cases, frame-center mean absolute error was 11.25 ms
+versus 40.60 ms for frame starts, but 12 slow-attack cases became less accurate.
+Timing summaries exclude missed/multiple detections; reports count them separately
+and retain all cases in tolerance-score denominators. Public timing defaults
+remain unchanged. See [evaluation details](evals/README.md).
+
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 
 ```sh
