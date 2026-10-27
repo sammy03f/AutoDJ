@@ -1,4 +1,4 @@
-"""Track a synthetic tone switch and retain an STFT comparison report."""
+"""Track a synthetic tone switch, plot it, and retain an STFT comparison report."""
 
 from datetime import datetime, timezone
 import hashlib
@@ -7,7 +7,9 @@ from pathlib import Path
 import platform
 
 import numpy as np
+import matplotlib
 
+from autodj.audio import save_spectrogram
 from autodj.dsp import dft, stft
 
 
@@ -47,7 +49,11 @@ def main():
              frequencies=result.frequencies, coefficients=result.coefficients,
              sample_rate=rate, frame_size=frame_size, hop_size=hop_size,
              window_sum=result.window_sum)
-    sources = sorted((ROOT / "src/autodj/dsp").glob("*.py")) + [Path(__file__)]
+    plot_path = output / "spectrogram.png"
+    save_spectrogram(result, plot_path, title="Tone switch at 0.25 s: 64 Hz → 192 Hz")
+    sources = sorted((ROOT / "src/autodj/dsp").glob("*.py")) + [
+        ROOT / "src/autodj/audio/spectrogram.py", Path(__file__),
+    ]
     report = {
         "suite": "stft_tone_switch", "suite_version": 1,
         "created_at_utc": now.isoformat(), "passed": passed,
@@ -58,10 +64,14 @@ def main():
         "frame_start_times": result.times.tolist(), "peak_frequencies_hz": peaks.tolist(),
         "max_absolute_error": error, "atol": 1e-10, "rtol": 1e-10,
         "python": platform.python_version(), "numpy": np.__version__,
+        "matplotlib": matplotlib.__version__,
         "platform": platform.platform(),
         "source_sha256": {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
                           for p in sources},
         "data": str((output / "tone_switch.npz").relative_to(ROOT)),
+        "spectrogram": {"path": str(plot_path.relative_to(ROOT)),
+                        "reference_amplitude": 1, "floor_db": -80, "ceiling_db": 0,
+                        "column_width_seconds": hop_size / rate},
     }
     report_path = ROOT / "evals/results" / f"stft-{run_id}.json"
     report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -70,6 +80,7 @@ def main():
         destination.write("\n")
     print(f"{'PASS' if passed else 'FAIL'} — report: {report_path.relative_to(ROOT)}")
     print(f"Arrays: {(output / 'tone_switch.npz').relative_to(ROOT)}")
+    print(f"Spectrogram: {plot_path.relative_to(ROOT)}")
     return 0 if passed else 1
 
 

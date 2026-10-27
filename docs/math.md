@@ -171,6 +171,35 @@ direct DFT. Empty/short signals yield zero frames with the frequency axis intact
 
 Reference: [NumPy real FFT conventions](https://numpy.org/doc/stable/reference/generated/numpy.fft.rfft.html).
 
+## Displaying the STFT as a spectrogram
+
+Our image uses one-sided amplitude rather than power density. First compute
+`A = abs(coefficients) / window_sum`, doubling interior bins but excluding DC
+and even-frame Nyquist. With odd frame lengths, the last bin is doubled too.
+Color is then `20*log10(A / reference_amplitude)`. A tone at the reference is
+0 dB; half that amplitude is about -6.02 dB. Raw PCM uses a reference of 32768;
+unit-scale signals use 1. We do not normalize every image to its loudest point.
+
+The default display clips colors to [-80, 0] dB. Silence maps to -80 dB without
+computing log(0), and stronger-than-reference amplitudes reach the top color.
+These are display limits; the stored complex coefficients remain unchanged.
+Window correction retains the same leakage and overlap limitations as our
+single-frame amplitude spectrum. The color values are not sound-pressure levels.
+
+The STFT stores `(frames, bins)`, but the image requires `(frequency rows,
+time columns)`, so plotting transposes the display data. Column m spans
+`[times[m], times[m] + hop_size/sample_rate)`. Its analysis uses an entire
+frame, so an overlapping frame can contain a later event than its start label.
+In the tone-switch example, the column starting at 0.21875 s already sees part
+of the switch at 0.25 s. This is expected, not early detection.
+
+Frequency cell boundaries lie halfway between adjacent bins, with the outer
+edges at DC and Nyquist. There is no interpolation between cells. In the example,
+the final column ends at 0.46875 s although its window analyzes through 0.5 s.
+This explicit convention also works for one frame or one frequency bin.
+
+Rendering uses [Matplotlib's explicit-cell pcolormesh](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.pcolormesh.html).
+
 ## Future notes
 
 For each new algorithm, document:

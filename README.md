@@ -46,7 +46,8 @@ selected from loaded audio, adjusted in amplitude, saved as WAV, and plotted
 as waveform images. A small educational DFT now extracts frequency coefficients
 and is checked against NumPy's FFT. Frequency spectrum PNGs show the amplitudes
 of those components, with optional Hann windowing to reduce distant leakage.
-A numerical STFT follows frequency content over time. Next: spectrogram plotting.
+A numerical STFT follows frequency content over time and can be saved as an
+amplitude spectrogram. Next: onset detection fundamentals.
 
 ## Development
 
@@ -261,7 +262,29 @@ python examples/stft.py
 It tracks a switch from 64 Hz to 192 Hz at 0.25 seconds, checks against the
 direct DFT, and saves a timestamped JSON report under `evals/results/` plus
 NumPy arrays under `outputs/stft/`. The frame crossing the switch contains both
-tones. See [DSP notes](docs/math.md) for timing, shape, and amplitude conventions.
+tones. The example also saves `spectrogram.png` beside its arrays and records
+the image path and display settings in the report.
+See [DSP notes](docs/math.md) for timing, shape, and amplitude conventions.
+
+Plot the STFT from your loaded audio (create `outputs/` first):
+
+```python
+from autodj.audio import save_spectrogram
+
+save_spectrogram(analysis, "outputs/spectrogram.png", reference_amplitude=32768)
+```
+
+Use reference amplitude 32768 for raw 16-bit PCM, or the default 1 for synthetic
+or normalized audio. Color shows gain-corrected amplitude in dB relative to
+that reference, with a fixed default range of -80 to 0 dB. Silence reaches the
+floor; levels outside the display range saturate. This is not a power-density
+or acoustic-loudness plot, and the strongest point is not automatically made 0 dB.
+
+The horizontal axis uses frame starts. Each column occupies one hop interval;
+its underlying analysis window may extend farther. The right edge is the last
+frame start plus one hop, not necessarily the end of the audio. Frequency cells
+are centered on FFT bins, bounded by 0 Hz and Nyquist. Empty STFT results raise
+`ValueError`. Saving overwrites existing PNGs without opening a GUI.
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 

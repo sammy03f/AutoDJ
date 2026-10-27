@@ -13,7 +13,8 @@
 - [x] Plot a frequency spectrum and explain bin spacing and amplitude scaling.
 - [x] Explore spectral leakage and periodic Hann windowing with gain correction.
 - [x] Compute an STFT with explicit frame timing and tone-switch tests.
-- [ ] Plot an STFT as a spectrogram.
+- [x] Plot an STFT as an amplitude spectrogram.
+- [ ] Introduce onset detection using synthetic transients.
 
 Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
@@ -38,7 +39,10 @@ saves plots and numeric observations for later comparison.
 `dsp/stft.py` applies Hann and a real FFT to complete overlapping frames.
 It returns complex coefficients with frame-start times and frequency bins.
 `examples/stft.py` tracks a 64 Hz → 192 Hz switch and saves reference comparisons.
-Next small task: plot the STFT as a spectrogram.
+`audio/spectrogram.py` renders gain-corrected one-sided amplitudes in dB with
+explicit frame-start coordinates and a fixed reference. The STFT example saves
+a PNG alongside its arrays and report. The v0.1 audio-analysis foundation is in place.
+Next small task: onset detection fundamentals using synthetic transients.
 
 ## Subsequent milestones
 

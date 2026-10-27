@@ -3,7 +3,7 @@
 AutoDJ will analyze, sequence, and mix locally supplied audio. The current
 implementation supports 16-bit PCM WAV loading, time selection, amplitude gain,
 WAV saving, waveform PNG export, an educational direct DFT, spectrum PNG export,
-and numerical STFT analysis.
+numerical STFT analysis, and amplitude spectrogram PNGs.
 
 The intended flow is:
 
@@ -44,6 +44,10 @@ by the sum of the weights. Default rectangular-window behavior is preserved.
 retains raw complex coefficients shaped (frames, bins), frame-start times,
 frequencies, framing settings, and window sum. It does not pad, center frames,
 or normalize magnitudes. The input and result reside in memory.
+`audio/spectrogram.py` consumes `StftResult`, corrects amplitudes by the window
+sum, and renders fixed-reference dB colors without altering coefficients. Its
+time cells begin at frame starts and span one hop; this is a display convention,
+not the duration of each analysis window. Matplotlib draws explicit cell edges.
 NumPy now supplies STFT computation as well as independent FFT comparisons.
 Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data

@@ -93,3 +93,10 @@ the DFT comparison but excluded from the pure-tone peak checks. The script exits
 with status 1 on a failed comparison. Reports record source fingerprints and
 environment versions; compare matching suite versions. Full boundary and
 amplitude checks are in `tests/test_stft.py`.
+
+The example now also saves a spectrogram PNG beside the arrays. Its report
+records the path, reference amplitude, color limits, column width, Matplotlib
+version, and renderer source hash. The numerical suite and its pass/fail criteria
+remain unchanged. `tests/test_spectrogram.py` separately checks dB scaling,
+DC/Nyquist handling, array orientation, cell coordinates, silence, and PNG output.
+Compare numeric results rather than PNG byte hashes across Matplotlib versions.

@@ -6,8 +6,9 @@ from .segments import select_time_range
 from .writer import save_wav
 from .waveform import save_waveform
 from .spectrum import save_spectrum
+from .spectrogram import save_spectrogram
 
 __all__ = [
     "WavAudio", "load_wav", "save_wav", "select_time_range", "apply_gain",
-    "save_waveform", "save_spectrum",
+    "save_waveform", "save_spectrum", "save_spectrogram",
 ]
