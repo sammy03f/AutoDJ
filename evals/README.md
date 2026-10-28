@@ -132,11 +132,11 @@ valid records of strength-only evaluation; they contain no peak metrics. Peak
 rule tests (silence, boundaries, plateaus, thresholds, ties, and close events)
 are in `tests/test_peak_picking.py`. BPM evaluation is still future work.
 
-## Frame-start versus frame-center timing
+## Onset timing comparison
 
 Run `python evals/onset_timing.py --label "Timing baseline"` from the activated
 project environment. It saves a timestamped report under
-`evals/results/onset-timing-*.json` and a PNG under `outputs/onset_timing/`.
+`evals/results/onset-timing-*.json` and comparison/energy-example PNGs under `outputs/onset_timing/`.
 Reports retain source fingerprints, Git state, versions, settings, and per-case
 input hashes. Earlier reports and images are preserved.
 
@@ -164,8 +164,28 @@ support an experimental alternative, not a general accuracy guarantee or a
 change to the default timestamps. The sweep does not cover every phase, sample
 rate, gain, noise condition, or polyphonic signal.
 
-Exit status checks selection invariance and negative controls only. A passing
-run does **not** mean every event was detected or frame center always improved
+Suite version 2 preserves the original signals and detection settings and adds
+energy refinement. It uses trailing mean-square energy over 8 samples, a 10%
+threshold above the local energy minimum, and a search radius of one STFT frame
+duration around the center timestamp. These constants are fixed across cases;
+ground-truth timestamps are used only to score results. The first upward crossing
+before the earliest local maximum is selected; no crossing retains the center.
+The extra energy-example plot shows this rule on a slow attack.
+
+Refined paired mean absolute error is 3.14 ms (clicks 0, sharp bursts 0, slow
+attacks 11.23 ms). Relative to centers, 84 cases improve, 7 worsen, and 9 tie;
+8 events remain missed. All 100 detected cases are within 20 ms, scored as
+100/108 across all events. Exact click/burst timing relies on these fixtures'
+silent backgrounds and abrupt starts. Noise, overlapping events, and different
+carrier phases remain untested by this suite. Energy refinement can follow an
+unrelated rise, and overlapping searches can produce duplicate/reordered times.
+
+Reports from version 1 retain only the two original methods. Compare those
+shared fields across versions; compare refined results against version 2 runs
+with matching settings and fixture hashes.
+
+Exit status checks selection invariance, refinement count, and negative controls only. A passing
+run does **not** mean every event was detected or refinement always improved
 timing. Compare matching suite/settings and inspect failures alongside error
 averages. Tests in `tests/test_onset_timing_eval.py` verify shift conventions,
 fixture starts, null errors for misses, and summary denominators.

@@ -49,7 +49,8 @@ of those components, with optional Hann windowing to reduce distant leakage.
 A numerical STFT follows frequency content over time and can be saved as an
 amplitude spectrogram. Spectral flux now measures positive spectral changes
 as a first onset-strength baseline, with thresholded peak picking for candidate
-onsets. Next: refine and evaluate onset timing before tempo estimation.
+onsets, plus optional energy-based timing refinement. Next: evaluate detection
+sensitivity before tempo estimation.
 
 ## Development
 
@@ -334,7 +335,27 @@ Suite version 2 reports one-to-one matches, misses, extra candidates, and signed
 timing error using a declared 31.25 ms tolerance. This evaluates the synthetic
 baseline, not real-music accuracy.
 
-Compare frame-start and frame-center onset timing across varied synthetic cases:
+Refine candidate times with a short trailing energy curve:
+
+```python
+from autodj.analysis import short_time_energy, refine_onset_times
+
+energy = short_time_energy(samples, window_size=8)
+centers = candidates.times + analysis.frame_size / (2 * analysis.sample_rate)
+refined_times = refine_onset_times(
+    energy, analysis.sample_rate, centers,
+    search_radius=analysis.frame_size / analysis.sample_rate,
+    relative_threshold=0.1,
+)
+```
+
+The window is in samples (8 samples is about 3.9 ms at 2048 Hz). The function
+looks for an energy rise within the search region and retains the supplied time
+if no crossing is found. It preserves candidate count and correspondence;
+overlapping searches can yield duplicate or reordered timestamps. It does not
+recover missed events or enforce minimum spacing again.
+
+Compare frame-start, frame-center, and refined timing across synthetic cases:
 
 ```sh
 python evals/onset_timing.py --label "Timing baseline"
@@ -348,7 +369,11 @@ none. For those 100 paired cases, frame-center mean absolute error was 11.25 ms
 versus 40.60 ms for frame starts, but 12 slow-attack cases became less accurate.
 Timing summaries exclude missed/multiple detections; reports count them separately
 and retain all cases in tolerance-score denominators. Public timing defaults
-remain unchanged. See [evaluation details](evals/README.md).
+remain unchanged. Suite version 2 adds energy refinement: mean absolute error
+is 3.14 ms on the same 100 paired cases. Compared with centers, 84 improve,
+7 worsen, and 9 tie. The 8 misses remain. A second plot shows the energy crossing
+on a slow attack. These isolated signals have silent backgrounds; this is not
+a real-music accuracy claim. See [evaluation details](evals/README.md).
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 

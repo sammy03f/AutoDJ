@@ -17,7 +17,8 @@
 - [x] Compute spectral-flux onset strength and test known synthetic transients.
 - [x] Select candidate onset timestamps with explicit peak and spacing rules.
 - [x] Compare frame-start and frame-center timing across transient shapes and alignments.
-- [ ] Refine onset timing using the signal and evaluate before tempo estimation.
+- [x] Add optional energy-based onset timing refinement and evaluate it.
+- [ ] Evaluate detection sensitivity across gain and background noise before tempo estimation.
 
 Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
@@ -55,8 +56,13 @@ matches, and timing error; this baseline is 31.25 ms early on the current fixtur
 Center timestamps reduce mean absolute error on the 100 single-candidate cases
 from 40.60 ms to 11.25 ms, but worsen 12 slow-attack cases; 8 cases are missed
 by the fixed threshold. Public timing defaults remain frame starts.
-Next small task: investigate signal-based timing refinement, with slow attacks
-and missed events included in evaluation. Tempo estimation follows later.
+`short_time_energy` and `refine_onset_times` now provide an optional local
+energy-rise estimate. Suite version 2 reduces paired mean absolute error to
+3.14 ms: 84 cases improve versus center labels, 7 worsen, and 9 tie. All 8 misses
+remain. Short-window smoothing and gradual attacks still bias the crossing late;
+background noise and competing sounds are not covered by this isolated suite.
+Next small task: evaluate detection sensitivity across gain and background
+noise, keeping this timing baseline for comparison. Tempo estimation follows later.
 
 ## Subsequent milestones
 

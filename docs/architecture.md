@@ -4,7 +4,7 @@ AutoDJ will analyze, sequence, and mix locally supplied audio. The current
 implementation supports 16-bit PCM WAV loading, time selection, amplitude gain,
 WAV saving, waveform PNG export, an educational direct DFT, spectrum PNG export,
 numerical STFT analysis, amplitude spectrogram PNGs, spectral-flux onset strength,
-and candidate onset peak picking.
+candidate onset peak picking, and optional energy-based timing refinement.
 
 The intended flow is:
 
@@ -57,9 +57,14 @@ frame-start alignment. Plotting and synthetic fixture generation live in
 applies an absolute threshold and local-maximum rule, then suppresses close peaks
 in descending strength order. `OnsetCandidates` holds frame indices and unchanged
 timestamps. This offline greedy baseline does not estimate BPM or refine timing.
-`evals/onset_timing.py` independently studies frame-start versus frame-center
-labels while checking that the selected peaks stay the same. Its synthetic
-sweep, reports, and comparison plot do not change the public timing convention.
+`analysis/energy.py` computes a trailing mean-square curve at sample resolution.
+`refine_onset_times` in `analysis/onsets.py` optionally uses this curve to locate
+an upward energy crossing within a bounded neighborhood of each candidate.
+It returns a separate timestamp array, keeping candidate correspondence without
+changing the original frame indices or enforcing spacing/order after refinement.
+`evals/onset_timing.py` compares frame-start, frame-center, and refined times on
+the same selected events, saving metrics and comparison/energy plots. Refinement
+does not recover missed detections or change the peak picker's default timing.
 Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,

@@ -1,5 +1,6 @@
 """Features describing changes in the audio."""
 
-from .onsets import OnsetCandidates, pick_onsets, spectral_flux
+from .energy import short_time_energy
+from .onsets import OnsetCandidates, pick_onsets, refine_onset_times, spectral_flux
 
-__all__ = ["OnsetCandidates", "pick_onsets", "spectral_flux"]
+__all__ = ["OnsetCandidates", "pick_onsets", "refine_onset_times", "short_time_energy", "spectral_flux"]

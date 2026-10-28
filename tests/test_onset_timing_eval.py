@@ -11,7 +11,7 @@ class OnsetTimingEvaluationTests(unittest.TestCase):
     def test_original_burst_center_corrects_known_offset(self):
         case = evaluate_case("sharp_burst", 128, 32, 0)
         self.assertEqual(case["frame_indices"], [14])
-        self.assertEqual(case["errors_seconds"], {"frame_start": -0.03125, "frame_center": 0})
+        self.assertEqual(case["errors_seconds"], {"frame_start": -0.03125, "frame_center": 0, "energy_refined": 0})
         self.assertTrue(case["candidate_selection_unchanged"])
 
     def test_shift_uses_frame_size_and_preserves_selection(self):
@@ -32,12 +32,14 @@ class OnsetTimingEvaluationTests(unittest.TestCase):
 
     def test_summary_tracks_misses_extras_and_worse_results(self):
         cases = [
-            {"candidate_count": 1, "errors_seconds": {"frame_start": -0.04, "frame_center": -0.01}},
-            {"candidate_count": 1, "errors_seconds": {"frame_start": -0.01, "frame_center": 0.02}},
+            {"candidate_count": 1, "errors_seconds": {"frame_start": -0.04, "frame_center": -0.01, "energy_refined": 0.005}},
+            {"candidate_count": 1, "errors_seconds": {"frame_start": -0.01, "frame_center": 0.02, "energy_refined": 0.03}},
             {"candidate_count": 0, "errors_seconds": None},
             {"candidate_count": 2, "errors_seconds": None},
         ]
         summary = summarize_cases(cases)
+        self.assertEqual(summary["refined_vs_center_better_cases"], 1)
+        self.assertEqual(summary["refined_vs_center_worse_cases"], 1)
         self.assertEqual(summary["case_count"], 4)
         self.assertEqual(summary["paired_timing_cases"], 2)
         self.assertEqual(summary["center_better_cases"], 1)

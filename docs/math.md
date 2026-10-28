@@ -318,7 +318,43 @@ The shift fixes the original aligned sharp-burst example exactly, but that
 does not make it a universal onset correction. With slower attacks, the largest
 spectral increase may occur later in the envelope; shifting its frame label
 forward can overshoot the beginning. We retain the existing public defaults
-and will compare signal-based timing refinement before choosing a correction.
+and compare the optional signal-based refinement below.
+
+## Refining timestamps with local energy
+
+The flux peak identifies a region where the spectrum changes. We can inspect
+sample-level energy inside that region to estimate the start more precisely.
+Our trailing mean-square curve is
+
+`E[n] = (x[n]^2 + x[n-1]^2 + ... + x[n-W+1]^2) / W`.
+
+Samples before zero are treated as zero. The curve has one value per input
+sample, timestamped `n/Fs`. Squaring removes the sign of oscillations; averaging
+smooths their variation. Unlike a centered window, a trailing window cannot
+rise before the event. It can delay a threshold crossing, so there is no fixed
+subtraction that makes every waveform exact. NumPy performs the direct
+convolution; we implement the timing rule ourselves.
+
+For each candidate, examine the closed interval `candidate ± search_radius`,
+clipped to available sample timestamps. Define
+`level = min(E) + fraction * (max(E) - min(E))` within that interval. Find the
+first sample strictly above this level whose predecessor was at or below it,
+up to the earliest maximum. If no crossing exists, retain the candidate time.
+For example, energies `[2, 2, 4, 6, 10]` at fraction 0.25 give level 4 and a
+crossing at index 3. A flat or already-falling region gives no crossing.
+
+The evaluation fixes W=8 (3.90625 ms), fraction=0.1, and a radius of L/Fs around
+the frame center. Ground truth is not an input to refinement. It reduces mean
+absolute error from 11.25 ms to 3.14 ms on the same 100 detected events:
+clicks and sharp bursts are exact, while slow attacks cross 11.23 ms late.
+Compared with center timing, 84 improve, 7 worsen, and 9 tie. The eight missed
+events stay missed. These are isolated events in silence, not music.
+
+This estimates an energy crossing, which need not equal the first nonzero
+sample or the perceived start. A weak preceding sound can attract the crossing;
+noise can raise the local minimum. Separate candidates can refine to the same
+crossing or change order, so results retain correspondence without claiming a
+new spacing guarantee. Refinement is optional and does not change peak picking.
 
 ## Future notes
 

@@ -80,6 +80,62 @@ def pick_onsets(
     return OnsetCandidates(indices, timestamps[indices].copy())
 
 
+def refine_onset_times(
+    energy: Iterable[float], sample_rate: float, candidate_times: Iterable[float], *,
+    search_radius: float, relative_threshold: float = 0.1,
+) -> NDArray[np.float64]:
+    """Estimate local energy-rise times around supplied candidates, in seconds.
+
+    Search the closed interval candidate +/- search_radius, clipped to the
+    signal. Before the earliest local maximum, find the first upward crossing
+    of min + relative_threshold * (max - min). Require an observed value at or
+    below that level in the search region; otherwise retain the candidate.
+    Flat regions also retain the candidate. Crossings use sample timestamps,
+    with no interpolation or smoothing-delay correction.
+
+    Energy must be finite, nonnegative, 1-D and sampled at sample_rate. Times
+    must be finite, strictly increasing and inside [0, len(energy)/sample_rate).
+    Radius must be positive; threshold must lie strictly between zero and one.
+    Output preserves candidate correspondence/count, but overlapping searches
+    can produce equal or reordered times. No new events are detected. This
+    offline heuristic can follow an unrelated rise in background audio.
+    """
+    if not math.isfinite(sample_rate) or sample_rate <= 0:
+        raise ValueError("Sample rate must be finite and positive")
+    if not math.isfinite(search_radius) or search_radius <= 0:
+        raise ValueError("Search radius must be finite and positive")
+    if not math.isfinite(relative_threshold) or not 0 < relative_threshold < 1:
+        raise ValueError("Relative threshold must lie strictly between zero and one")
+    values = np.asarray(tuple(energy))
+    times = np.asarray(tuple(candidate_times))
+    if values.ndim != 1 or times.ndim != 1:
+        raise ValueError("Energy and candidate times must be 1-D")
+    if np.iscomplexobj(values) or np.iscomplexobj(times):
+        raise TypeError("Energy and candidate times must be real")
+    values = values.astype(np.float64)
+    times = times.astype(np.float64)
+    if not np.isfinite(values).all() or np.any(values < 0):
+        raise ValueError("Energy must be finite and nonnegative")
+    if (not np.isfinite(times).all() or np.any(times < 0)
+            or np.any(times >= len(values) / sample_rate) or np.any(np.diff(times) <= 0)):
+        raise ValueError("Candidate times must increase strictly and lie inside the signal")
+    refined = times.copy()
+    for index, time in enumerate(times):
+        lower = math.ceil(max(0.0, time - search_radius) * sample_rate)
+        upper = min(len(values), math.floor(min(len(values) / sample_rate,
+                                               time + search_radius) * sample_rate) + 1)
+        region = values[lower:upper]
+        if region.size < 2:
+            continue
+        peak = int(np.argmax(region))
+        floor = float(region.min())
+        level = floor + relative_threshold * (float(region[peak]) - floor)
+        crossings = np.flatnonzero((region[:peak] <= level) & (region[1:peak + 1] > level))
+        if crossings.size:
+            refined[index] = (lower + int(crossings[0]) + 1) / sample_rate
+    return refined
+
+
 def spectral_flux(result: StftResult) -> NDArray[np.float64]:
     """Sum positive changes in raw, nonnegative-frequency FFT magnitudes.
 
