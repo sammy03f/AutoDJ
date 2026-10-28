@@ -49,8 +49,9 @@ of those components, with optional Hann windowing to reduce distant leakage.
 A numerical STFT follows frequency content over time and can be saved as an
 amplitude spectrogram. Spectral flux now measures positive spectral changes
 as a first onset-strength baseline, with thresholded peak picking for candidate
-onsets, plus optional energy-based timing refinement. Next: evaluate detection
-sensitivity before tempo estimation.
+onsets, plus optional energy-based timing refinement. A repeatable volume/noise
+evaluation now measures misses and false detections. Next: investigate a
+noise-aware threshold before tempo estimation.
 
 ## Development
 
@@ -374,6 +375,25 @@ is 3.14 ms on the same 100 paired cases. Compared with centers, 84 improve,
 7 worsen, and 9 tie. The 8 misses remain. A second plot shows the energy crossing
 on a slow attack. These isolated signals have silent backgrounds; this is not
 a real-music accuracy claim. See [evaluation details](evals/README.md).
+
+Evaluate detection at different event volumes and background noise levels:
+
+```sh
+python evals/onset_sensitivity.py --label "Fixed threshold baseline"
+```
+
+This keeps the detector unchanged and runs 576 event cases plus 12 noise-only
+controls with seeded Gaussian noise. Reports under `evals/results/` retain
+matches, misses, false detections, precision/recall, and conditional timing
+errors for frame-start, frame-center, and energy-refined timestamps. Plots are
+saved under `outputs/onset_sensitivity/`.
+
+The baseline misses every quiet (gain 0.1) event in silence. At noise standard
+deviation 0.2, noise-only controls produce 6.67 false detections per second.
+Energy refinement can follow unrelated noise rises and reduces matches from
+403 to 342 out of 576 at the declared 50 ms tolerance. High noisy-case recall
+can include chance matches; inspect precision and controls alongside recall.
+See [evaluation details](evals/README.md) for settings and limitations.
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 

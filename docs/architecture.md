@@ -65,6 +65,11 @@ changing the original frame indices or enforcing spacing/order after refinement.
 `evals/onset_timing.py` compares frame-start, frame-center, and refined times on
 the same selected events, saving metrics and comparison/energy plots. Refinement
 does not recover missed detections or change the peak picker's default timing.
+`evals/onset_sensitivity.py` reuses the timing suite's clean synthetic fixtures
+and adds paired, seeded Gaussian noise and event gain changes. It independently
+scores each timestamp method against one known event per case, and scores
+noise-only controls separately. This evaluation adds no production algorithm
+or default changes; reports preserve all candidate timestamps and source hashes.
 Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,

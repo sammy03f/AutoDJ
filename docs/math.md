@@ -356,6 +356,34 @@ noise can raise the local minimum. Separate candidates can refine to the same
 crossing or change order, so results retain correspondence without claiming a
 new spacing guarantee. Refinement is optional and does not change peak picking.
 
+## Measuring volume and noise sensitivity
+
+The sensitivity fixture is `y[n] = gain * event[n] + sigma * z[n]`, where `z`
+is a seeded standard-normal sequence. Gain and noise amplitude vary independently;
+we do not normalize the result. Sigma is the noise's theoretical standard
+deviation, not the signal-to-noise ratio. The finite draw's RMS is also recorded.
+
+Without added noise, scaling a signal by a positive gain scales its FFT
+magnitudes and spectral flux by that gain. An absolute threshold of 10 therefore
+has different consequences for quiet and loud events. Adding noise changes
+magnitudes nonlinearly: random frame-to-frame increases can exceed the threshold.
+In the saved sweep, gain-0.1 events in silence are all missed, while noise alone
+at sigma=0.2 generates 6.67 false detections per second across three short controls.
+
+For a single true event, we match the nearest candidate within 50 ms, count all
+other candidates as false, and count an unmatched true event as missed. Refining
+a timestamp can change this classification without changing candidate count.
+Precision measures the fraction of candidates matched; recall measures the
+fraction of true events matched. Both are needed: noise can generate many peaks,
+some of which happen to fall inside the matching window. Timing-error means are
+conditional on matches and cannot establish success by themselves.
+
+The event gains, noise levels, and seeds are fixed before running the sweep.
+Repeated seeds support paired comparisons but create correlated cases. Ground
+truth is only used for scoring, never by the detector or refinement. These
+measurements motivate testing a noise-aware threshold; they do not establish
+which replacement will work or validate detection on music.
+
 ## Future notes
 
 For each new algorithm, document:

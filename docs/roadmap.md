@@ -18,7 +18,8 @@
 - [x] Select candidate onset timestamps with explicit peak and spacing rules.
 - [x] Compare frame-start and frame-center timing across transient shapes and alignments.
 - [x] Add optional energy-based onset timing refinement and evaluate it.
-- [ ] Evaluate detection sensitivity across gain and background noise before tempo estimation.
+- [x] Evaluate detection sensitivity across gain and background noise.
+- [ ] Investigate a noise-aware onset threshold against the saved sensitivity baseline.
 
 Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
@@ -61,8 +62,14 @@ energy-rise estimate. Suite version 2 reduces paired mean absolute error to
 3.14 ms: 84 cases improve versus center labels, 7 worsen, and 9 tie. All 8 misses
 remain. Short-window smoothing and gradual attacks still bias the crossing late;
 background noise and competing sounds are not covered by this isolated suite.
-Next small task: evaluate detection sensitivity across gain and background
-noise, keeping this timing baseline for comparison. Tempo estimation follows later.
+`evals/onset_sensitivity.py` now holds detection settings fixed across 576 event
+cases and 12 noise-only controls. Frame-center scoring matches 403/576 events
+with 588 extra candidates; refined scoring matches 342/576 with 649 extras
+at 50 ms tolerance. Gain-0.1 events in silence are all missed; the strongest
+noise-only condition produces 6.67 false detections per second. These results
+expose fixed-threshold and refinement weaknesses without changing production.
+Next small task: investigate a noise-aware threshold, checking both false
+positives and misses against this baseline. Tempo estimation follows later.
 
 ## Subsequent milestones
 

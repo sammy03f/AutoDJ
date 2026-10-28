@@ -189,3 +189,70 @@ run does **not** mean every event was detected or refinement always improved
 timing. Compare matching suite/settings and inspect failures alongside error
 averages. Tests in `tests/test_onset_timing_eval.py` verify shift conventions,
 fixture starts, null errors for misses, and summary denominators.
+
+
+## Volume and noise sensitivity
+
+Run `python evals/onset_sensitivity.py --label "Fixed threshold baseline"`.
+It writes `evals/results/onset-sensitivity-<run-id>.json` and a comparison PNG
+under `outputs/onset_sensitivity/<run-id>/`. Earlier runs are preserved. JSON
+includes input/source hashes, Git state, library versions, full settings,
+per-case timestamps/metrics, pooled summaries, and gain/noise and shape groups.
+
+Suite version 1 has 576 single-event cases:
+
+- Three existing shapes: click, sharp burst, slow attack.
+- Event gains 0.1, 0.25, 0.5, 1.0; additive Gaussian noise standard deviations
+  0, 0.01, 0.05, 0.2. Gain scales the event only, not the noise.
+- NumPy PCG64 seeds 7, 19, 43, reused across shapes/gains/offsets for paired
+  comparisons. At zero noise the seed repetitions are intentionally identical.
+- Event offsets 0, 8, 16, 31 samples after sample 512; 1536 samples at 2048 Hz.
+- Fixed STFT frame 128/hop 32, flux threshold 10, minimum spacing 0.1 s.
+- Refinement uses 8-sample trailing energy, local fraction 0.1, and a search
+  radius of 128/2048 s around each frame center.
+
+There are also 12 noise-only controls (four noise levels × three seeds), without
+a declared event. Noise standard deviation is not an SNR; realized noise RMS is
+recorded. Signals are floating-point arrays with no clipping or normalization.
+The known event time is the clean signal's first nonzero sample, even when noise
+is present before that time. The experiment does not change the detector.
+
+Each method independently matches at most one candidate: the nearest to the
+single event within an inclusive 50 ms tolerance (1e-12 s roundoff allowance).
+Equal-distance ties choose the first candidate. Every remaining candidate is a
+false detection. If no candidate matches, the event is missed; an out-of-range
+candidate counts as false as well. All candidates in controls are false.
+
+Precision = matches / candidate count; recall = matches / event count. Summaries
+pool counts, rather than average per-case percentages. Undefined ratios are
+null, including control recall and precision with no candidates. Timing-error
+means use matched candidates only, with their count reported; methods can match
+different subsets, so their error averages are not a paired timing comparison.
+False detections per second use the complete generated signal duration, including
+padding; boundary suppression and discarded STFT tails remain part of the pipeline.
+
+Initial event-case results:
+
+| Timestamp method | Matches / 576 | Misses | False detections |
+| --- | --- | --- | --- |
+| Frame start | 401 | 175 | 590 |
+| Frame center | 403 | 173 | 588 |
+| Energy refined | 342 | 234 | 649 |
+
+At gain 0.1 in silence, all 36 event cases are missed. At gains 0.5 and 1.0 in
+silence, all 36 cases per gain match. At noise standard deviation 0.2 the controls
+produce 15 false detections in 2.25 seconds, or 6.67/s; lower tested noise levels
+produce none in these controls. Refinement can move candidates to unrelated
+energy rises and makes this noisy sweep worse despite its clean-signal benefit.
+
+High recall under strong noise can include chance temporal matches and does not
+prove the detector recognized the event. Read precision, false counts, and controls
+together. Seed reuse means these are correlated fixtures, not 576 independent
+trials or a confidence estimate. Only one sample rate, STFT setting, carrier
+phase, and stationary white-noise model are covered. This is not real-music
+validation, and future tuning needs fresh seeds/cases as well as this baseline.
+
+Exit status checks candidate-count preservation and scoring accounting only;
+misses and false detections do not fail the evaluation. Unit tests verify noise
+repeatability, gain independence, tolerance boundaries, duplicate accounting,
+null metrics, pooled counts, clean detection, and noise controls.
