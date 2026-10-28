@@ -304,3 +304,54 @@ Exit status checks accounting, not improved accuracy. Tests verify the local
 statistics, edge clipping, strict per-frame thresholds, plateau semantics,
 scalar compatibility, invalid inputs, seed separation, and fixed-arm parity
 with the original sensitivity evaluation.
+
+
+## Selecting an adaptive threshold
+
+Run `python evals/onset_threshold_search.py --label "Threshold selection baseline"`.
+The JSON report is saved as `evals/results/onset-threshold-search-<run-id>.json`,
+with a plot under `outputs/onset_threshold_search/<run-id>/`. Suite version 1
+uses radii 8/12/16 and multipliers 1.5/2/2.5/3 (12 combinations), always floor
+0.1. Other signal, detection and scoring settings match the adaptive evaluation:
+576 isolated event cases and 12 noise-only controls per seed group, frame-center
+timestamps, no energy refinement, and 50 ms matching tolerance.
+
+Tuning uses previously observed seeds 101/211/307. For each setting, pool matches
+TP, misses FN, and false candidates FP from both event cases and controls, then
+compute `F1 = 2*TP / (2*TP + FP + FN)`. This balances precision and recall under
+the suite's mixture of event/noise-only cases; changing that mixture could
+change the preferred setting. Ties prefer fewer false candidates, more matches,
+then smaller radius and multiplier. Zero predictions with events yield F1 zero;
+a wholly empty scoring population has undefined F1 and cannot be selected.
+
+The winning configuration is frozen before generating/analyzing held-out seeds
+401/503/607. Only the fixed, original adaptive, and selected adaptive settings
+are evaluated on those draws. Held-out scores do not trigger reselection. All
+12 tuning summaries and ordered per-case adaptive metrics are retained, with
+an input-hash manifest (event cases followed by controls). The held-out sections
+retain full case details, curves and timestamps. Source hashes and environment
+versions support later comparisons.
+
+The selected radius is 12 frames, multiplier 2.5, floor 0.1. Tuning F1 is 0.840.
+The original adaptive baseline is radius 8 / multiplier 3 / floor 0.1.
+
+| Held-out method | Matches / 576 | Misses | False including controls | Precision | Recall | F1 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Fixed 10 | 402 | 174 | 649 | 0.382 | 0.698 | 0.494 |
+| Original adaptive | 263 | 313 | 0 | 1.000 | 0.457 | 0.627 |
+| Selected adaptive | 425 | 151 | 0 | 1.000 | 0.738 | 0.849 |
+
+The fixed arm's 649 false candidates comprise 633 on event cases and 16 on
+noise-only controls. The selected setting matches all clean events at all four
+gains, but still misses quiet events in stronger noise. There is no default
+change: this is a promising configuration for these fixtures, not proof of
+robustness on songs, overlapping events, or changing background noise.
+
+Seeds are disjoint, but the signal families, gains, phases, and event positions
+are shared. Zero-noise cases repeat exactly between groups. This checks new
+noise realizations, not independent musical diversity; seeds are reused across
+conditions, so cases are correlated. The held-out seeds are now observed and
+must not become a feedback loop for further tuning without a new evaluation set.
+Tests cover objective accounting, tie-breaking, seed overlap rejection, unchanged
+baseline behavior, and the order of tuning/selection/held-out evaluation. Exit
+status checks accounting, not an accuracy target.

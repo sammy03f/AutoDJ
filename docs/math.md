@@ -417,6 +417,31 @@ The evaluation confirms the tradeoff: on fresh noise seeds, false extras drop
 from 603 to zero but matches drop from 360 to 262 out of 576. This motivates a
 separate recall/false-detection study before selecting any default.
 
+## Selecting parameters without using evaluation feedback
+
+A threshold multiplier controls a tradeoff: stricter thresholds can suppress
+false detections and real events together. We compare a small, declared grid
+using tuning cases rather than selecting the setting with the nicest plot.
+
+Precision is `TP/(TP+FP)`, recall is `TP/(TP+FN)`, and their harmonic mean is
+`F1 = 2*TP/(2*TP+FP+FN)`. False detections from noise-only controls contribute
+to FP as well. This avoids choosing a detector that finds events by emitting
+many unrelated peaks. F1 is a chosen balancing objective, not a universal DJ
+quality measure; it depends on the case mix and matching tolerance.
+
+The first search uses radius 8/12/16 and multiplier 1.5/2/2.5/3, floor 0.1,
+with all other settings held fixed. Tuning seeds are 101/211/307. We select
+maximum tuning F1, freeze the parameters, then evaluate on seeds 401/503/607.
+The selected radius 12 means up to 187.5 ms on each side at hop 32 / Fs 2048;
+its larger neighborhood and multiplier 2.5 let more isolated peaks survive
+than the original radius 8 / multiplier 3 rule.
+
+Selected held-out F1 is 0.849 versus 0.627 for the original adaptive setting
+and 0.494 for fixed threshold 10. The selected method still misses 151/576
+events. New seeds change noise draws, not event shapes; clean cases are shared.
+These results support testing the selected setting on repeated-event sequences,
+not claiming it generalizes to real music or changing production defaults.
+
 ## Future notes
 
 For each new algorithm, document:

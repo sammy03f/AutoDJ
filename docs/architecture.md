@@ -77,6 +77,12 @@ paths share peak, plateau, and spacing rules. `evals/onset_adaptive.py` reuses t
 sensitivity fixtures/scorer and compares fixed/adaptive thresholds using identical
 frame-center timestamps, without refinement. Seed groups and parameters are
 recorded separately, and full threshold/strength curves accompany the metrics.
+`evals/onset_threshold_search.py` calls the same evaluator with explicit
+radius/multiplier settings. It ranks a fixed grid on tuning seeds, freezes the
+selection, then evaluates only the selected setting and original baselines on
+new seeds. The objective includes false detections from noise controls. It saves
+all tuning scores, fixture hashes, and held-out case details without modifying
+production defaults or using held-out scores to select parameters.
 Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,

@@ -20,7 +20,8 @@
 - [x] Add optional energy-based onset timing refinement and evaluate it.
 - [x] Evaluate detection sensitivity across gain and background noise.
 - [x] Implement and evaluate an optional local mean/std onset threshold on baseline and fresh seeds.
-- [ ] Study the adaptive threshold recall/false-detection tradeoff with separate tuning and evaluation cases.
+- [x] Study the adaptive threshold tradeoff with separate tuning and evaluation noise seeds.
+- [ ] Validate repeated-event sequences as the next step toward tempo estimation.
 
 Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
@@ -76,8 +77,16 @@ mean + 3 population standard deviations, and floor 0.1, with no parameter search
 On fresh seeds, extras fall from 603 to zero, but matches fall from 360 to 262
 out of 576 events. The rule recovers some quiet events but suppresses many
 broader peaks, so it is optional rather than a new default.
-Next small task: study the recall/false-detection tradeoff using separate tuning
-cases and new evaluation seeds. Tempo estimation follows later.
+`evals/onset_threshold_search.py` selects among 12 radius/multiplier settings
+using tuning seeds 101/211/307 and F1 including noise-only false detections.
+Radius 12 / multiplier 2.5 / floor 0.1 wins before any analysis of held-out
+seeds 401/503/607. On those draws it matches 425/576 events with 151 misses
+and zero false detections, versus 263 matches for the original adaptive rule
+and 402 matches with 649 false detections for the fixed rule (including controls).
+Defaults stay unchanged. Remaining misses occur in noisy conditions; quiet
+clean events are recovered. These are new noise draws, not new signal families.
+Next small task: validate repeated-event sequences as the step toward tempo
+estimation, where neighboring events can affect thresholds and suppression.
 
 ## Subsequent milestones
 

@@ -50,9 +50,9 @@ A numerical STFT follows frequency content over time and can be saved as an
 amplitude spectrogram. Spectral flux now measures positive spectral changes
 as a first onset-strength baseline, with thresholded peak picking for candidate
 onsets, plus optional energy-based timing refinement. A repeatable volume/noise
-evaluation now measures misses and false detections. Next: investigate a
-better recall/false-detection balance before tempo estimation. An optional local
-mean/std threshold is implemented and evaluated, but is too strict on many events.
+evaluation now measures misses and false detections. A small tuning study has
+selected a better local mean/std threshold on separate noise seeds, while keeping
+defaults unchanged. Next: validate repeated-event sequences before tempo estimation.
 
 ## Development
 
@@ -423,6 +423,31 @@ seeds, adaptive detection gives 262 matches, 314 misses, and zero extras, versus
 rule suppresses noise but also real events, so it remains optional. JSON reports
 and comparison/threshold plots retain both successes and failures. Parameters
 are fixed before evaluation; see [evaluation details](evals/README.md).
+
+Search a small parameter grid with separate tuning and evaluation noise seeds:
+
+```sh
+python evals/onset_threshold_search.py --label "Threshold selection baseline"
+```
+
+The study maximizes tuning F1 across event cases and noise-only controls, freezes
+the chosen setting, then evaluates it on new noise draws. It selected radius 12
+and multiplier 2.5 with floor 0.1. On 576 held-out event cases it matched 425,
+missed 151, and produced zero false detections, including controls (F1 0.849).
+The original adaptive setting matched 263; fixed threshold 10 matched 402 with
+649 false detections including controls. This is evidence for this synthetic
+noise distribution, not a general music benchmark.
+
+To try the selected setting explicitly:
+
+```python
+thresholds = local_onset_threshold(strength, radius=12, std_multiplier=2.5, floor=0.1)
+candidates = pick_onsets(strength, analysis.times, threshold=thresholds, min_interval=0.1)
+```
+
+Public defaults remain unchanged. Reports retain all tuning scores and held-out
+case details under `evals/results/onset-threshold-search-*.json`, with a comparison
+plot under `outputs/onset_threshold_search/`.
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 

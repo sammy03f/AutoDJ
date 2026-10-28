@@ -26,10 +26,11 @@ RADIUS, MULTIPLIER, FLOOR = 8, 3.0, 0.1
 SEED_GROUPS = {"baseline": baseline.SEEDS, "fresh": (101, 211, 307)}
 
 
-def analyze(samples: np.ndarray) -> tuple:
+def analyze(samples: np.ndarray, *, radius: int = RADIUS,
+            multiplier: float = MULTIPLIER) -> tuple:
     result = stft(samples, baseline.RATE, frame_size=baseline.FRAME_SIZE, hop_size=baseline.HOP_SIZE)
     strength = spectral_flux(result)
-    thresholds = local_onset_threshold(strength, radius=RADIUS, std_multiplier=MULTIPLIER, floor=FLOOR)
+    thresholds = local_onset_threshold(strength, radius=radius, std_multiplier=multiplier, floor=FLOOR)
     centers = result.times + baseline.FRAME_SIZE / (2 * baseline.RATE)
     selections = {name: pick_onsets(strength, centers, threshold=threshold,
                                    min_interval=baseline.MIN_INTERVAL)
@@ -37,9 +38,10 @@ def analyze(samples: np.ndarray) -> tuple:
     return centers, strength, thresholds, selections
 
 
-def evaluate_case(kind: str | None, gain: float, noise_std: float, seed: int, offset: int) -> dict:
+def evaluate_case(kind: str | None, gain: float, noise_std: float, seed: int, offset: int, *,
+                  radius: int = RADIUS, multiplier: float = MULTIPLIER) -> dict:
     samples, noise = baseline.make_noisy_signal(kind, gain, noise_std, seed, offset)
-    centers, strength, thresholds, selections = analyze(samples)
+    centers, strength, thresholds, selections = analyze(samples, radius=radius, multiplier=multiplier)
     truth = None if kind is None else (512 + offset) / baseline.RATE
     return {
         "kind": kind or "noise_only", "gain": gain, "noise_std": noise_std,
@@ -60,11 +62,12 @@ def summarize(cases: list[dict]) -> dict:
     return baseline.summarize(cases, methods=DETECTORS)
 
 
-def evaluate_group(seeds: tuple[int, ...]) -> dict:
-    cases = [evaluate_case(kind, gain, std, seed, offset) for kind in baseline.KINDS
+def evaluate_group(seeds: tuple[int, ...], *, radius: int = RADIUS,
+                   multiplier: float = MULTIPLIER) -> dict:
+    cases = [evaluate_case(kind, gain, std, seed, offset, radius=radius, multiplier=multiplier) for kind in baseline.KINDS
              for gain in baseline.GAINS for std in baseline.NOISE_STDS
              for seed in seeds for offset in baseline.OFFSETS]
-    controls = [evaluate_case(None, 0, std, seed, 0) for std in baseline.NOISE_STDS for seed in seeds]
+    controls = [evaluate_case(None, 0, std, seed, 0, radius=radius, multiplier=multiplier) for std in baseline.NOISE_STDS for seed in seeds]
     return {
         "seeds": seeds, "summary": summarize(cases), "control_summary": summarize(controls),
         "by_condition": [{"gain": gain, "noise_std": std,
