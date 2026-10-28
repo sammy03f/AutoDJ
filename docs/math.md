@@ -469,6 +469,35 @@ normal-spacing recall is 1049/1920 in this sweep, with 164 extras; it also emits
 therefore does not establish reliable rhythm tracking. Unthresholded onset
 strength remains available for a future periodicity/tempo estimator.
 
+## Diagnosing filter stages without conflating candidates and hits
+
+A candidate is a local peak; a known hit is an event in the synthetic signal.
+Removing ten candidates need not lose ten matched hits: some were false, and
+others may be replaced by alternate candidates in the one-to-one matching.
+We therefore record both candidate sets and matched-event counts.
+
+Let P be all strictly positive local peaks, T the subset passing the selected
+threshold, and S the survivors after spacing suppression. Then `S ⊆ T ⊆ P`.
+Candidate removals are `P - T` and `T - S`. If M(C) is the maximum one-to-one
+match count using candidates C, the successive match losses are
+`truth_count - M(P)`, `M(P) - M(T)`, and `M(T) - M(S)`. These are nonnegative
+and sum to final misses. Each matching is optimized independently, so pair
+assignments can change; the differences measure matching capacity, not a
+unique causal explanation for each missed hit.
+
+A fourth branch applies spacing directly to P. Its survivors need not contain
+or be contained by S, because thresholding can remove a strong peak that would
+otherwise suppress its neighbor. This checks the interaction instead of assuming
+the two filter effects are additive.
+
+In the frozen sequence suite, M(P)=2304 and M(T)=M(S)=1111. Thresholding removes
+12411 of 13686 candidate peaks, and spacing removes zero afterward. Spacing
+alone yields 1862 matches with 3119 extras, while P has 11382 extras. The
+100 ms spacing constraint remains relevant in principle, but relaxing it alone
+cannot recover the currently missing hits: the selected threshold has already
+rejected their available candidates. Raw noisy matches may occur by chance;
+these counts do not imply perfect unfiltered onset recognition.
+
 ## Future notes
 
 For each new algorithm, document:

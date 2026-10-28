@@ -53,7 +53,9 @@ onsets, plus optional energy-based timing refinement. A repeatable volume/noise
 evaluation now measures misses and false detections. A small tuning study has
 selected a better local mean/std threshold on separate noise seeds, while keeping
 defaults unchanged. Repeated-event evaluations now expose dense-hit suppression
-and false detections on longer noise controls; tempo estimation is not yet implemented.
+and false detections on longer noise controls. A filter-stage diagnostic identifies
+the selected threshold as the active bottleneck in those fixtures; tempo estimation
+is not yet implemented.
 
 ## Development
 
@@ -468,6 +470,27 @@ and suppress real hits. The selected method also produces 40 candidates on the
 longer noise-only controls. This extends the isolated-event findings without
 retuning or changing defaults. Reports are saved under `evals/results/` and plots
 under `outputs/onset_sequences/`.
+
+Separate threshold rejection from minimum-spacing suppression:
+
+```sh
+python evals/onset_diagnostics.py --label "Threshold and spacing diagnostic"
+```
+
+Four branches keep the same strength curve and peak rules: all positive local
+peaks, selected threshold only, 100 ms spacing only, and both filters. The full
+branch reproduces the saved sequence baseline. Reports retain rejected frame
+indices, per-peak strengths/thresholds, match losses and false detections.
+
+On these fixtures, threshold-only and both-filters results are identical:
+1111/2304 hits matched, 1193 missed, and 164 extra candidates. Spacing removes
+no candidate after the selected threshold, although spacing alone reduces
+matches when threshold filtering is disabled. All positive local peaks can
+match every truth within 50 ms but also produce 11382 extras, so that result
+is not a usable detector. The next threshold investigation should address dense
+events raising the local background estimate while still rejecting noise.
+Defaults are unchanged. Reports and plots are under `evals/results/` and
+`outputs/onset_diagnostics/`.
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 

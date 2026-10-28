@@ -422,3 +422,64 @@ within the tolerance, especially in dense tracks. Passing the accounting checks
 means counts are consistent, not that rhythm detection or BPM estimation works.
 Defaults remain unchanged. Further analysis is needed before treating this
 peak-picked event list as a reliable musical beat grid.
+
+
+## Threshold versus spacing diagnostics
+
+Run `python evals/onset_diagnostics.py --label "Threshold and spacing diagnostic"`.
+Suite version 1 reuses all 288 sequence tracks and 36 controls with the same
+samples, seeds, frame-center timestamps and 50 ms one-to-one scorer. The selected
+threshold remains radius 12 / multiplier 2.5 / floor 0.1. Four branches change
+one filter at a time:
+
+| Branch | Threshold | Minimum interval |
+| --- | --- | --- |
+| All peaks | 0 (strictly positive local peaks) | 0 |
+| Threshold only | Selected adaptive | 0 |
+| Spacing only | 0 | 100 ms |
+| Both | Selected adaptive | 100 ms |
+
+Boundary and plateau rules are active in every branch. Disabling the threshold
+also removes the 0.1 floor, so small numerical peaks can enter the candidate
+list. This is a mechanism diagnostic, not a proposed detector or parameter
+selection procedure. No retuning or default changes occur.
+
+The report saves per-branch indices/times/metrics, threshold-rejected frames,
+spacing-suppressed frames, and a trace containing each positive local peak's
+strength, threshold and status. Candidate accounting follows the nested path
+all peaks -> threshold only -> both. Separately, optimal one-to-one match counts
+give unmatched hits before filtering, additional misses after thresholding,
+and additional misses after spacing. These increments sum to final misses.
+Optimal matching may reassign pairs, so increments are not causal labels for
+individual hits. Spacing-only and both-filter survivor sets need not be nested:
+rejecting a stronger peak first can let a weaker neighboring peak survive.
+
+All 288 event tracks and 36 controls reproduce the saved selected-adaptive
+baseline exactly (input hashes, candidate frames and per-hit metrics).
+
+| Branch | Matches / 2304 | Misses | Extras on event tracks | Noise-only extras |
+| --- | --- | --- | --- | --- |
+| All peaks | 2304 | 0 | 11382 | 1602 |
+| Threshold only | 1111 | 1193 | 164 | 40 |
+| Spacing only | 1862 | 442 | 3119 | 546 |
+| Both | 1111 | 1193 | 164 | 40 |
+
+Across the 1920 non-stress hits, threshold filtering loses 871 matches; across
+384 spacing-stress hits it loses 322. Spacing removes no candidate after this
+threshold in either group or in the controls. Thus the threshold, not spacing,
+is the active bottleneck on this particular filtered candidate list. This does
+not make spacing harmless: without thresholding it reduces matches by 442
+(262 non-stress, 180 stress) while removing many extras. Dense hits can raise
+the local threshold above the peaks, as illustrated by the clean burst plots.
+
+Raw peaks matching every truth does not mean every event was recognized: noisy
+peaks can land within the tolerance by chance, and the raw branch admits over
+11000 extra event-track candidates. Removing filters is not a useful fix.
+This study uses already-observed synthetic fixtures, not fresh validation data.
+
+Reports are saved as `evals/results/onset-diagnostics-<run-id>.json`; comparison
+and peak-stage PNGs are under `outputs/onset_diagnostics/<run-id>/`. Source/input
+hashes, settings, environment versions and Git state are retained. Exit status
+checks nested sets, candidate partitions, nonnegative match losses and scoring
+accounting, not improved accuracy. Tests independently isolate the filters,
+check interactions, preserve peak rules, and verify full-branch baseline parity.

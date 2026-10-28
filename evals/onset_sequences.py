@@ -139,16 +139,16 @@ def evaluate_case(kind: str, bpm: int, subdivision: int, pattern: str,
                         for name, selection in selections.items()}}
 
 
-def summarize(cases: list[dict]) -> dict:
+def summarize(cases: list[dict], *, methods: tuple[str, ...] = METHODS) -> dict:
     duration = sum(case["duration_seconds"] for case in cases)
-    methods = {}
-    for method in METHODS:
+    summaries = {}
+    for method in methods:
         rows = [case["metrics"][method] for case in cases]
         counts = {key: sum(row[key] for row in rows) for key in
                   ("event_count", "candidate_count", "matched_count", "missed_count", "false_count")}
         tp, fp, fn = counts["matched_count"], counts["false_count"], counts["missed_count"]
         errors = np.array([pair["signed_error_seconds"] for row in rows for pair in row["matches"]])
-        methods[method] = {**counts, "precision": tp / (tp + fp) if tp + fp else None,
+        summaries[method] = {**counts, "precision": tp / (tp + fp) if tp + fp else None,
                            "recall": tp / (tp + fn) if tp + fn else None,
                            "f1": 2 * tp / (2 * tp + fp + fn) if 2 * tp + fp + fn else None,
                            "false_detections_per_second": fp / duration if duration else None,
@@ -156,7 +156,7 @@ def summarize(cases: list[dict]) -> dict:
                            "mean_absolute_error_seconds": float(np.abs(errors).mean()) if errors.size else None,
                            "mean_signed_error_seconds": float(errors.mean()) if errors.size else None,
                            "max_absolute_error_seconds": float(np.abs(errors).max()) if errors.size else None}
-    return {"case_count": len(cases), "duration_seconds": duration, "methods": methods}
+    return {"case_count": len(cases), "duration_seconds": duration, "methods": summaries}
 
 
 def save_plots(cases: list[dict], output: Path) -> None:

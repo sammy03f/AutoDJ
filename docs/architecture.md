@@ -90,6 +90,14 @@ minimum total absolute error), with per-hit match indices and missed/false
 indices retained. Spacing stress is reported separately. Sequence generation,
 matching and plotting are evaluation code; no tempo estimator or production
 threshold changes are introduced.
+`evals/onset_diagnostics.py` reuses the sequence fixtures and one-to-one scorer.
+It calls the production peak picker in four branches with threshold and spacing
+independently enabled/disabled, retaining plateau/boundary rules. Selected
+threshold parameters stay frozen. Candidate set differences identify rejected
+and suppressed frames; match-count differences along nested candidate sets
+measure lost matching capacity without assigning causal labels to individual
+truth events. The evaluator records controls and all four branches; it does
+not modify the production detector.
 Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,

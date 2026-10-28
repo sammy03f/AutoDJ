@@ -22,7 +22,8 @@
 - [x] Implement and evaluate an optional local mean/std onset threshold on baseline and fresh seeds.
 - [x] Study the adaptive threshold tradeoff with separate tuning and evaluation noise seeds.
 - [x] Evaluate frozen thresholds on repeated-event sequences and longer noise controls.
-- [ ] Investigate dense-event suppression before choosing onset detector defaults.
+- [x] Diagnose threshold rejection versus spacing suppression on the frozen sequence suite.
+- [ ] Investigate a background estimate less affected by dense events, retaining noise controls.
 
 Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
@@ -94,9 +95,16 @@ matches 1049/1920 hits with 164 extras, versus fixed 1091 with 1522 extras.
 Selected adaptive also produces 40 false candidates on the longer controls.
 Dense events can raise their own local threshold, and the 100 ms spacing rule
 cannot preserve every hit in the fastest sequences. Defaults remain unchanged.
-Next small task: investigate dense-event suppression before choosing detector
-defaults. A future tempo estimator can use the unthresholded strength curve;
-this evaluation does not estimate BPM.
+`evals/onset_diagnostics.py` now toggles threshold and spacing independently.
+The full branch exactly reproduces the sequence baseline. Threshold-only and
+full results are identical on all event tracks and controls: selected-threshold
+filtering accounts for 1193 additional unmatched hits; spacing suppresses zero
+surviving candidates. Spacing alone does reduce matches when thresholding is
+disabled, but that branch admits 3119 extras. Candidate and match-count effects
+are saved separately; noisy raw peaks can match truth by chance.
+Next small task: investigate a background estimate less affected by dense
+events while retaining noise controls. A future tempo estimator can use the
+unthresholded strength curve; these evaluations do not estimate BPM.
 
 ## Subsequent milestones
 
