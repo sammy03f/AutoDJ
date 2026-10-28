@@ -52,7 +52,8 @@ as a first onset-strength baseline, with thresholded peak picking for candidate
 onsets, plus optional energy-based timing refinement. A repeatable volume/noise
 evaluation now measures misses and false detections. A small tuning study has
 selected a better local mean/std threshold on separate noise seeds, while keeping
-defaults unchanged. Next: validate repeated-event sequences before tempo estimation.
+defaults unchanged. Repeated-event evaluations now expose dense-hit suppression
+and false detections on longer noise controls; tempo estimation is not yet implemented.
 
 ## Development
 
@@ -448,6 +449,25 @@ candidates = pick_onsets(strength, analysis.times, threshold=thresholds, min_int
 Public defaults remain unchanged. Reports retain all tuning scores and held-out
 case details under `evals/results/onset-threshold-search-*.json`, with a comparison
 plot under `outputs/onset_threshold_search/`.
+
+Evaluate frozen settings on repeated click and burst sequences:
+
+```sh
+python evals/onset_sequences.py --label "Repeated events baseline"
+```
+
+The suite generates 288 eight-hit tracks at known tempos, plus 36 duration-matched
+noise-only controls. BPM is an input to the generator, not an estimated result.
+One-to-one matching prevents a candidate from counting for multiple hits. Reports
+retain per-hit errors, misses, extras, and separate spacing-stress results.
+
+Outside the 180 BPM/four-hits-per-beat stress cases, the selected adaptive rule
+matches 1049/1920 hits with 164 extra candidates, versus 1091 matches and 1522
+extras for fixed threshold 10. Dense sequences can raise the adaptive threshold
+and suppress real hits. The selected method also produces 40 candidates on the
+longer noise-only controls. This extends the isolated-event findings without
+retuning or changing defaults. Reports are saved under `evals/results/` and plots
+under `outputs/onset_sequences/`.
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 

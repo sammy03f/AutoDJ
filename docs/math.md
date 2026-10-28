@@ -442,6 +442,33 @@ events. New seeds change noise draws, not event shapes; clean cases are shared.
 These results support testing the selected setting on repeated-event sequences,
 not claiming it generalizes to real music or changing production defaults.
 
+## Repeated events and one-to-one scoring
+
+For an input tempo B and s events per beat, the nominal event interval is
+`60/(B*s)` seconds. This is event repetition rate, not an estimated musical
+pulse. We generate eight events at sample positions
+`512 + round(k * Fs * 60/(B*s))`, rounding each absolute position independently.
+This keeps timing error within half a sample rather than accumulating rounded
+interval error. Alternating amplitudes test whether weaker neighbors survive.
+
+With multiple truths, independently matching each truth to its nearest
+candidate can reuse a candidate or make a greedy choice that blocks another
+valid match. Our scoring dynamic program considers skipping either side or
+matching a pair within tolerance. It maximizes match count, then minimizes
+summed absolute error, with chronological one-to-one correspondence. The table
+costs O(number_of_truths * number_of_candidates); only the evaluator uses truth.
+Per-hit errors are conditional on these matches, while misses/extras stay in
+precision and recall denominators.
+
+At 180 BPM with four hits per beat, the interval is 83.3 ms, below our 100 ms
+minimum spacing. Even perfect evidence cannot yield a candidate at every exact
+hit while satisfying that spacing rule. In addition, dense hits raise local
+mean/std thresholds and can suppress one another. The selected setting's
+normal-spacing recall is 1049/1920 in this sweep, with 164 extras; it also emits
+40 candidates on the longer noise-only controls. Success on isolated events
+therefore does not establish reliable rhythm tracking. Unthresholded onset
+strength remains available for a future periodicity/tempo estimator.
+
 ## Future notes
 
 For each new algorithm, document:

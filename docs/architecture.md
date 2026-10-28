@@ -83,6 +83,13 @@ selection, then evaluates only the selected setting and original baselines on
 new seeds. The objective includes false detections from noise controls. It saves
 all tuning scores, fixture hashes, and held-out case details without modifying
 production defaults or using held-out scores to select parameters.
+`evals/onset_sequences.py` tests the frozen threshold configurations on eight-hit
+click/burst tracks and duration-matched noise controls. Its evaluator uses
+chronological one-to-one dynamic-programming matching (maximum matches, then
+minimum total absolute error), with per-hit match indices and missed/false
+indices retained. Spacing stress is reported separately. Sequence generation,
+matching and plotting are evaluation code; no tempo estimator or production
+threshold changes are introduced.
 Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,

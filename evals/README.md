@@ -355,3 +355,70 @@ must not become a feedback loop for further tuning without a new evaluation set.
 Tests cover objective accounting, tie-breaking, seed overlap rejection, unchanged
 baseline behavior, and the order of tuning/selection/held-out evaluation. Exit
 status checks accounting, not an accuracy target.
+
+
+## Repeated events at known tempos
+
+Run `python evals/onset_sequences.py --label "Repeated events baseline"`.
+Reports are saved as `evals/results/onset-sequences-<run-id>.json`, with comparison
+and example sequence PNGs under `outputs/onset_sequences/<run-id>/`. Source/input
+hashes, versions, Git state, detector settings, per-hit matching and per-condition
+summaries are retained. There is no retuning and BPM is not estimated.
+
+Suite version 1 has 288 eight-hit event tracks (2304 known hits):
+
+- Clicks and sharp 128 Hz decaying bursts, using the existing burst formula.
+- 60/120/180 BPM, with one or four hits per beat.
+- Steady amplitudes or alternating 1/0.35 amplitudes, multiplied by gain 0.1 or 1.
+- Additive Gaussian noise std 0/0.05/0.2, PCG64 seeds 701/809.
+- Fs=2048, first event at sample 512; each absolute event position is rounded
+  independently, avoiding accumulated interval-rounding drift. Half a second
+  of audio follows the final event start. No normalization or clipping.
+- Frozen STFT 128/hop 32, fixed threshold 10, original adaptive radius 8 / 3 std,
+  selected adaptive radius 12 / 2.5 std, floor 0.1, minimum spacing 0.1 s.
+  All methods use frame-center timestamps without energy refinement.
+
+Thirty-six noise-only controls cover the six track durations, three noise
+levels and two seeds. They have no event truth; every candidate is false.
+Noise is paired across compatible conditions. Zero-noise seed repetitions and
+some equal-duration controls are identical; these are correlated fixtures,
+not independent trials. Absolute event positions vary relative to the STFT hop
+at 180 BPM. Stationary white noise, two event shapes and fixed carrier phase
+remain much narrower than real music.
+
+Matching uses a chronological one-to-one dynamic program. It first maximizes
+the number of pairs within 50 ms (inclusive with 1e-12 s roundoff allowance),
+then minimizes summed absolute timing error. Exact ties prefer matching, skipping
+a candidate, then skipping a truth. It handles overlapping tolerance windows
+without assigning the same candidate or event twice. This matters at 83.3 ms hit
+spacing. Every unmatched truth is a miss and every unmatched candidate is false.
+Precision/recall/F1 pool hit counts. Timing means include matches only, and each
+method may match different hits. A brute-force oracle checks short matching
+problems independently of the implementation.
+
+The 48 tracks at 180 BPM with four hits/beat contain 384 hits at about 83.3 ms
+spacing, less than the detector's 100 ms minimum. They are labeled spacing
+stress; the other 240 tracks contain 1920 hits. Stress results are separate so
+the spacing constraint's predictable misses do not disappear into one average.
+
+| Method | Normal-spacing matches / 1920 | Normal extras | Stress matches / 384 | Stress extras | Noise-only extras |
+| --- | --- | --- | --- | --- | --- |
+| Fixed | 1091 | 1522 | 132 | 56 | 273 |
+| Original adaptive | 638 | 26 | 38 | 0 | 8 |
+| Selected adaptive | 1049 | 164 | 62 | 0 | 40 |
+
+The selected setting improves matches over the original adaptive setting but
+admits more noise. It substantially reduces extras relative to fixed threshold
+10, with slightly fewer matches overall outside spacing stress. At 120 BPM and
+four hits/beat, selected adaptive matches only 102/384 hits versus fixed 232/384,
+even though nominal spacing is above 100 ms. Neighboring events influence the
+local statistics; STFT timing and spacing suppression can also affect close
+candidates. The fastest case combines dense-event thresholds with a spacing
+constraint, so its misses cannot all be attributed to one cause.
+
+Longer noise controls produce false detections even for settings with zero
+extras in the earlier short-fixture study. Noisy matches can still be accidental
+within the tolerance, especially in dense tracks. Passing the accounting checks
+means counts are consistent, not that rhythm detection or BPM estimation works.
+Defaults remain unchanged. Further analysis is needed before treating this
+peak-picked event list as a reliable musical beat grid.

@@ -21,7 +21,8 @@
 - [x] Evaluate detection sensitivity across gain and background noise.
 - [x] Implement and evaluate an optional local mean/std onset threshold on baseline and fresh seeds.
 - [x] Study the adaptive threshold tradeoff with separate tuning and evaluation noise seeds.
-- [ ] Validate repeated-event sequences as the next step toward tempo estimation.
+- [x] Evaluate frozen thresholds on repeated-event sequences and longer noise controls.
+- [ ] Investigate dense-event suppression before choosing onset detector defaults.
 
 Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
@@ -85,8 +86,17 @@ and zero false detections, versus 263 matches for the original adaptive rule
 and 402 matches with 649 false detections for the fixed rule (including controls).
 Defaults stay unchanged. Remaining misses occur in noisy conditions; quiet
 clean events are recovered. These are new noise draws, not new signal families.
-Next small task: validate repeated-event sequences as the step toward tempo
-estimation, where neighboring events can affect thresholds and suppression.
+`evals/onset_sequences.py` now evaluates 288 eight-hit tracks (2304 known hits)
+and 36 noise-only controls. One-to-one matching maximizes matched hits, then
+minimizes total timing error. Normal-spacing cases and 83.3 ms spacing stress
+cases are reported separately. On normal-spacing cases, selected adaptive
+matches 1049/1920 hits with 164 extras, versus fixed 1091 with 1522 extras.
+Selected adaptive also produces 40 false candidates on the longer controls.
+Dense events can raise their own local threshold, and the 100 ms spacing rule
+cannot preserve every hit in the fastest sequences. Defaults remain unchanged.
+Next small task: investigate dense-event suppression before choosing detector
+defaults. A future tempo estimator can use the unthresholded strength curve;
+this evaluation does not estimate BPM.
 
 ## Subsequent milestones
 
