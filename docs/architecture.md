@@ -54,7 +54,7 @@ NumPy now supplies STFT computation as well as independent FFT comparisons.
 frame. It uses raw linear magnitudes, ignores decreases, and preserves STFT
 frame-start alignment. Plotting and synthetic fixture generation live in
 `examples/onsets.py`. A separate `pick_onsets` function takes strength and times,
-applies an absolute threshold and local-maximum rule, then suppresses close peaks
+applies a scalar or per-frame threshold and local-maximum rule, then suppresses close peaks
 in descending strength order. `OnsetCandidates` holds frame indices and unchanged
 timestamps. This offline greedy baseline does not estimate BPM or refine timing.
 `analysis/energy.py` computes a trailing mean-square curve at sample resolution.
@@ -70,6 +70,13 @@ and adds paired, seeded Gaussian noise and event gain changes. It independently
 scores each timestamp method against one known event per case, and scores
 noise-only controls separately. This evaluation adds no production algorithm
 or default changes; reports preserve all candidate timestamps and source hashes.
+`local_onset_threshold` computes an inspectable centered mean/std threshold
+curve in `analysis/onsets.py`. It uses clipped neighborhoods including the current
+frame. `pick_onsets` accepts this curve or its existing scalar threshold; both
+paths share peak, plateau, and spacing rules. `evals/onset_adaptive.py` reuses the
+sensitivity fixtures/scorer and compares fixed/adaptive thresholds using identical
+frame-center timestamps, without refinement. Seed groups and parameters are
+recorded separately, and full threshold/strength curves accompany the metrics.
 Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,

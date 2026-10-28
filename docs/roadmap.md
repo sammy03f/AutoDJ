@@ -19,7 +19,8 @@
 - [x] Compare frame-start and frame-center timing across transient shapes and alignments.
 - [x] Add optional energy-based onset timing refinement and evaluate it.
 - [x] Evaluate detection sensitivity across gain and background noise.
-- [ ] Investigate a noise-aware onset threshold against the saved sensitivity baseline.
+- [x] Implement and evaluate an optional local mean/std onset threshold on baseline and fresh seeds.
+- [ ] Study the adaptive threshold recall/false-detection tradeoff with separate tuning and evaluation cases.
 
 Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
@@ -68,8 +69,15 @@ with 588 extra candidates; refined scoring matches 342/576 with 649 extras
 at 50 ms tolerance. Gain-0.1 events in silence are all missed; the strongest
 noise-only condition produces 6.67 false detections per second. These results
 expose fixed-threshold and refinement weaknesses without changing production.
-Next small task: investigate a noise-aware threshold, checking both false
-positives and misses against this baseline. Tempo estimation follows later.
+`local_onset_threshold` now supplies a per-frame curve to `pick_onsets`, whose
+scalar threshold behavior remains available. The first rule uses radius 8,
+mean + 3 population standard deviations, and floor 0.1, with no parameter search.
+`evals/onset_adaptive.py` evaluates baseline seeds and fresh seeds 101/211/307.
+On fresh seeds, extras fall from 603 to zero, but matches fall from 360 to 262
+out of 576 events. The rule recovers some quiet events but suppresses many
+broader peaks, so it is optional rather than a new default.
+Next small task: study the recall/false-detection tradeoff using separate tuning
+cases and new evaluation seeds. Tempo estimation follows later.
 
 ## Subsequent milestones
 

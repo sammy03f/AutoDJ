@@ -87,16 +87,16 @@ def evaluate_case(kind: str | None, gain: float, noise_std: float, seed: int, of
     }
 
 
-def summarize(cases: list[dict]) -> dict:
+def summarize(cases: list[dict], *, methods: tuple[str, ...] = METHODS) -> dict:
     duration = sum(case["duration_seconds"] for case in cases)
-    methods = {}
-    for method in METHODS:
+    summaries = {}
+    for method in methods:
         rows = [case["metrics"][method] for case in cases]
         counts = {key: sum(row[key] for row in rows) for key in
                   ("event_count", "candidate_count", "matched_count", "missed_count", "false_count")}
         errors = np.array([row["signed_error_seconds"] for row in rows
                            if row["signed_error_seconds"] is not None])
-        methods[method] = {
+        summaries[method] = {
             **counts,
             "precision": counts["matched_count"] / counts["candidate_count"] if counts["candidate_count"] else None,
             "recall": counts["matched_count"] / counts["event_count"] if counts["event_count"] else None,
@@ -105,7 +105,7 @@ def summarize(cases: list[dict]) -> dict:
             "mean_signed_error_seconds": float(errors.mean()) if errors.size else None,
             "mean_absolute_error_seconds": float(np.abs(errors).mean()) if errors.size else None,
         }
-    return {"case_count": len(cases), "duration_seconds": duration, "methods": methods}
+    return {"case_count": len(cases), "duration_seconds": duration, "methods": summaries}
 
 
 def save_plot(conditions: list[dict], controls: list[dict], path: Path) -> None:

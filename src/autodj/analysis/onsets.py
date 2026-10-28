@@ -18,15 +18,57 @@ class OnsetCandidates:
     times: NDArray[np.float64]
 
 
+def local_onset_threshold(
+    strength: Iterable[float], *, radius: int, std_multiplier: float = 3.0,
+    floor: float = 0.1,
+) -> NDArray[np.float64]:
+    """Return max(floor, local mean + multiplier * population std) per frame.
+
+    The centered neighborhood includes the current frame and up to radius
+    frames on each side, clipped at boundaries (no padding). This offline rule
+    uses future frames and costs O(frame_count * radius). Parameters are in
+    raw spectral-flux units, except radius (frames) and the dimensionless
+    multiplier. The floor prevents tiny numerical changes from becoming peaks.
+    Events contribute to their own threshold; dense events and short edge
+    neighborhoods may suppress real peaks. No probability interpretation is implied.
+    """
+    if isinstance(radius, bool) or not isinstance(radius, int):
+        raise TypeError("Radius must be an integer")
+    if radius < 1:
+        raise ValueError("Radius must be positive")
+    if not math.isfinite(std_multiplier) or std_multiplier < 0:
+        raise ValueError("Standard-deviation multiplier must be finite and nonnegative")
+    if not math.isfinite(floor) or floor < 0:
+        raise ValueError("Floor must be finite and nonnegative")
+    values = np.asarray(tuple(strength))
+    if values.ndim != 1:
+        raise ValueError("Strength must be 1-D")
+    if np.iscomplexobj(values):
+        raise TypeError("Strength must be real")
+    values = values.astype(np.float64)
+    if not np.isfinite(values).all() or np.any(values < 0):
+        raise ValueError("Strength must be finite and nonnegative")
+    thresholds = np.empty(values.size, dtype=np.float64)
+    with np.errstate(over="ignore", invalid="ignore"):
+        for index in range(values.size):
+            region = values[max(0, index - radius):index + radius + 1]
+            thresholds[index] = np.maximum(floor, region.mean() + std_multiplier * region.std())
+    if not np.isfinite(thresholds).all():
+        raise ValueError("Strength magnitudes are too large to compute finite thresholds")
+    return thresholds
+
+
 def pick_onsets(
-    strength: Iterable[float], times: Iterable[float], *, threshold: float,
+    strength: Iterable[float], times: Iterable[float], *, threshold: float | Iterable[float],
     min_interval: float,
 ) -> OnsetCandidates:
-    """Select local maxima above an absolute threshold with spacing in seconds.
+    """Select local maxima above a scalar or per-frame threshold, with spacing.
 
     Strength and times must be finite, real, nonnegative 1-D sequences of equal
-    length. Times must increase strictly. Threshold and min_interval must be
-    finite and nonnegative. A peak must be strictly above threshold.
+    length. Times must increase strictly. Threshold is either a scalar or a
+    1-D sequence matching strength. Threshold and min_interval must be finite
+    and nonnegative. A peak must be strictly above its threshold. Plateaus use
+    the threshold at their first index, even if later thresholds are lower.
 
     A plateau qualifies only if both neighboring values are lower; choose its
     first index. Peaks touching either boundary are excluded. Fewer than three
@@ -39,8 +81,6 @@ def pick_onsets(
     Timestamps are copied as supplied, with no timing correction. When using
     spectral_flux, pass STFT frame-start times. Input arrays are unchanged.
     """
-    if not math.isfinite(threshold) or threshold < 0:
-        raise ValueError("Threshold must be finite and nonnegative")
     if not math.isfinite(min_interval) or min_interval < 0:
         raise ValueError("Minimum interval must be finite and nonnegative")
     values = np.asarray(tuple(strength))
@@ -57,10 +97,20 @@ def pick_onsets(
             or np.any(np.diff(timestamps) <= 0)):
         raise ValueError("Times must be finite, nonnegative, and strictly increasing")
 
+    thresholds = np.asarray(threshold if np.isscalar(threshold) or isinstance(threshold, np.ndarray) else tuple(threshold))
+    if np.iscomplexobj(thresholds):
+        raise TypeError("Threshold must be real")
+    if thresholds.ndim > 1 or (thresholds.ndim == 1 and thresholds.size != values.size):
+        raise ValueError("Threshold must be a scalar or a 1-D sequence matching strength")
+    thresholds = thresholds.astype(np.float64)
+    if not np.isfinite(thresholds).all() or np.any(thresholds < 0):
+        raise ValueError("Threshold must be finite and nonnegative")
+    thresholds = np.broadcast_to(thresholds, values.shape)
+
     candidates = []
     index = 1
     while index < len(values) - 1:
-        if values[index] > threshold and values[index] > values[index - 1]:
+        if values[index] > thresholds[index] and values[index] > values[index - 1]:
             end = index
             while end + 1 < len(values) and values[end + 1] == values[index]:
                 end += 1

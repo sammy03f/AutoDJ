@@ -384,6 +384,39 @@ truth is only used for scoring, never by the detector or refinement. These
 measurements motivate testing a noise-aware threshold; they do not establish
 which replacement will work or validate detection on music.
 
+## Local adaptive onset threshold
+
+An absolute threshold does not account for local background strength. Our first
+optional alternative computes, for each frame i, the mean and population
+standard deviation of flux in `[i-radius, i+radius]`, clipped at the boundaries:
+
+`T[i] = max(floor, mean(local_flux) + multiplier * std(local_flux))`.
+
+The peak picker requires `flux[i] > T[i]`. It keeps the existing local-maximum
+and spacing rules. A plateau uses its first frame's threshold, even if a later
+frame has a lower threshold. The helper returns the entire threshold curve so
+we can inspect it separately from peak selection. Radius is measured in frames;
+with hop 32 at 2048 Hz, radius 8 spans 125 ms on either side. The floor is in raw
+flux units, as is the mean/std; the multiplier is dimensionless.
+
+For `[1, 3, 5]`, radius 1 and multiplier 1, the first clipped neighborhood is
+`[1, 3]`: mean 2, population std 1, giving threshold 3 if the floor is zero.
+The center neighborhood's std is `sqrt(8/3)`. No padding or sample-variance
+correction is applied. Centering uses future frames, so this is offline analysis.
+
+With a zero floor, positive gain scales both flux and its threshold equally.
+A nonzero floor breaks exact gain invariance but suppresses tiny numerical
+changes. The test configuration uses floor 0.1, radius 8, multiplier 3. These
+are experimental settings, not universal constants or a probabilistic
+three-sigma guarantee: flux is nonnegative, correlated, and not assumed Gaussian.
+
+The event contributes to its own local statistics. Broad or dense events can
+raise the threshold and suppress themselves; clipped edge neighborhoods can
+also be too small for a peak to exceed three standard deviations above the mean.
+The evaluation confirms the tradeoff: on fresh noise seeds, false extras drop
+from 603 to zero but matches drop from 360 to 262 out of 576. This motivates a
+separate recall/false-detection study before selecting any default.
+
 ## Future notes
 
 For each new algorithm, document:

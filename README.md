@@ -51,7 +51,8 @@ amplitude spectrogram. Spectral flux now measures positive spectral changes
 as a first onset-strength baseline, with thresholded peak picking for candidate
 onsets, plus optional energy-based timing refinement. A repeatable volume/noise
 evaluation now measures misses and false detections. Next: investigate a
-noise-aware threshold before tempo estimation.
+better recall/false-detection balance before tempo estimation. An optional local
+mean/std threshold is implemented and evaluated, but is too strict on many events.
 
 ## Development
 
@@ -394,6 +395,34 @@ Energy refinement can follow unrelated noise rises and reduces matches from
 403 to 342 out of 576 at the declared 50 ms tolerance. High noisy-case recall
 can include chance matches; inspect precision and controls alongside recall.
 See [evaluation details](evals/README.md) for settings and limitations.
+
+Try an optional threshold that follows the local onset-strength background:
+
+```python
+from autodj.analysis import local_onset_threshold, pick_onsets
+
+thresholds = local_onset_threshold(strength, radius=8, std_multiplier=3, floor=0.1)
+candidates = pick_onsets(strength, analysis.times, threshold=thresholds, min_interval=0.1)
+```
+
+The threshold is `max(floor, local mean + multiplier * local standard deviation)`.
+Radius is in frames; the centered neighborhood includes the current frame and
+clips at signal edges. This uses future frames and is an offline method.
+The existing scalar threshold API still works; timestamps and peak-spacing rules
+are unchanged. Candidate timestamps above remain frame starts.
+
+Compare fixed/adaptive detection with common frame-center timestamps:
+
+```sh
+python evals/onset_adaptive.py --label "Local mean plus 3 std baseline"
+```
+
+Each seed group contains 576 event cases plus 12 noise-only controls. On fresh
+seeds, adaptive detection gives 262 matches, 314 misses, and zero extras, versus
+360 matches, 216 misses, and 603 extras with the fixed threshold. The adaptive
+rule suppresses noise but also real events, so it remains optional. JSON reports
+and comparison/threshold plots retain both successes and failures. Parameters
+are fixed before evaluation; see [evaluation details](evals/README.md).
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 

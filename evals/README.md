@@ -256,3 +256,51 @@ Exit status checks candidate-count preservation and scoring accounting only;
 misses and false detections do not fail the evaluation. Unit tests verify noise
 repeatability, gain independence, tolerance boundaries, duplicate accounting,
 null metrics, pooled counts, clean detection, and noise controls.
+
+
+## Fixed versus adaptive thresholds
+
+Run `python evals/onset_adaptive.py --label "Local mean plus 3 std baseline"`.
+Reports are `evals/results/onset-adaptive-<run-id>.json`; comparison and threshold
+plots live under `outputs/onset_adaptive/<run-id>/`. Full per-case strength,
+threshold, timestamps, input/source hashes, settings, Git state and environment
+versions are retained. The plots include a quiet success, a noisy success, and
+a clean slow-attack failure; these examples are not aggregate accuracy evidence.
+
+Suite version 1 reuses the sensitivity suite's shapes, gains, noise levels,
+offsets, sample rate, STFT settings, spacing, and 50 ms matching rule. Each arm
+uses frame-center timestamps with no energy refinement. Only the threshold
+changes: fixed 10 versus `max(0.1, mean + 3 * population_std)` in a centered
+radius-8-frame neighborhood including the current frame, clipped at boundaries.
+Parameters were declared before running either seed group; no parameter sweep
+or tuning is performed. The curve is offline and includes future frames.
+
+Baseline seeds are 7/19/43; fresh seeds are 101/211/307. Each group contains
+576 event cases and 12 noise-only controls. Cases reuse noise across conditions,
+and zero-noise fixtures are identical across seed groups. Fresh seeds test new
+noise draws, not new shapes, phases, rates, or independent clean examples. They
+are now observed evaluation data; future tuning needs another untouched group.
+
+| Seeds | Threshold | Matches / 576 | Misses | Extra candidates | Noise-only candidates |
+| --- | --- | --- | --- | --- | --- |
+| Baseline | Fixed | 403 | 173 | 588 | 15 |
+| Baseline | Adaptive | 267 | 309 | 0 | 0 |
+| Fresh | Fixed | 360 | 216 | 603 | 15 |
+| Fresh | Adaptive | 262 | 314 | 0 | 0 |
+
+At gain 0.1 in silence, adaptive selection recovers 18/36 cases versus 0/36
+for fixed selection. At gains 0.5 and 1.0 in silence it matches only 18/36 versus
+36/36 for fixed selection. Including broad events in their own neighborhood
+can raise the threshold enough to reject them. Eliminating false detections is
+therefore accompanied by substantial lost recall. The adaptive option is not
+promoted to a default, and zero false detections here does not establish noise
+robustness on music or other noise types.
+
+Scoring is independent per detector: nearest candidate within tolerance, all
+extras false, and unmatched truth missed. Conditional timing means may use
+different matched populations. Noise can create chance matches for the fixed
+arm, so its larger match count alone is not proof of better event recognition.
+Exit status checks accounting, not improved accuracy. Tests verify the local
+statistics, edge clipping, strict per-frame thresholds, plateau semantics,
+scalar compatibility, invalid inputs, seed separation, and fixed-arm parity
+with the original sensitivity evaluation.
