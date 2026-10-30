@@ -548,3 +548,68 @@ values, clipped neighborhoods, zero spread, input validation, gain scaling,
 dense-hit recovery, baseline compatibility, and seed separation. Exit status
 checks accounting, not improvement. The fresh seeds are now observed data;
 future tuning needs another evaluation set.
+
+
+## Autocorrelation tempo baseline
+
+Run `python evals/tempo.py --label "First tempo baseline"`.
+Reports are saved under `evals/results/tempo-<run-id>.json` and comparison/
+autocorrelation PNGs under `outputs/tempo/<run-id>/`. Source/input/strength hashes,
+versions, Git state, settings, searched lag-score curves, selected lag/score,
+and raw strength peak/mean are retained. Scores are not calibrated confidence.
+
+Suite version 1 has 40 primary clean cases: two shapes (click, decaying 128 Hz
+burst), five nominal tempos (60/90/120/150/180 BPM), gains 0.1/1, and initial
+sample offsets 0/11 after half a second. Each contains sixteen nominal beats
+and half a second of trailing padding beyond the sixteen-beat duration.
+Absolute event positions are rounded individually to samples. Fs=2048,
+STFT=128/hop 32, so the strength frame rate is 64 Hz. The estimator consumes
+raw spectral flux without thresholding, smoothing, or timing refinement.
+
+Parameters are fixed: search 60–200 BPM inclusive, integer lags no greater
+than half the strength length, maximum positive mean-subtracted autocorrelation
+normalized by zero-lag energy, no overlap correction or octave correction.
+There is no parameter search. The primary tolerance is 3% relative BPM error.
+No estimate, half-time, double-time, and other errors remain distinct; only
+nominal-BPM agreement counts as correct. Mean BPM error is conditional on an
+estimate, with its population size reported. Missing estimates remain in the
+accuracy denominator. Tests compare the entire curve with NumPy's independent
+full-correlation calculation and check known periodic signals.
+
+Primary results: 32/40 correct, 8 half-time errors, no double-time/other errors,
+and no missing estimates. The estimates are:
+
+| Nominal BPM | Estimated BPM (all primary variants) |
+| --- | --- |
+| 60 | 60.00 |
+| 90 | 89.30 |
+| 120 | 120.00 |
+| 150 | 75.29 |
+| 180 | 182.86 |
+
+The same waveform families repeat across gains/offsets; these are deterministic
+fixtures, not independent trials or a real-music accuracy estimate. At 150 BPM,
+the fundamental period is 25.6 strength frames and two periods are 51.2 frames.
+The stronger integer-lag score at 51 yields half-time instead of nominal BPM.
+This failure is retained rather than fixed by a fixture-specific correction.
+
+Twenty separate ambiguity cases use the same shapes/tempos, gain 1 and offset
+11, with either alternating amplitudes 1/0.2 or two equal events per nominal
+beat. Results against the nominal annotation are 6 correct, 6 half-time, 2
+double-time and 6 other estimates. The event repetition rate and whether it is
+inside the search interval are recorded separately. Equal subdivisions do not
+uniquely encode their intended musical meter; these results should not be
+interpreted as a uniquely labeled perceptual beat-tracking benchmark.
+
+Four eight-second controls are silence, a steady 128 Hz tone, a single burst,
+and Gaussian noise (std 0.05, PCG64 seed 2027). Silence and single burst return
+no estimate in this run. Steady tone returns 153.6 BPM, and noise returns about
+101.05 BPM. The steady-tone input produces tiny numerical spectral changes,
+which normalization can amplify; even a relatively large score need not mean
+there is rhythmic evidence. The raw-strength diagnostics make that visible.
+
+Exit status checks finite scores, search bounds, and silence abstention only;
+it does not require perfect BPM accuracy or abstention on every control. The
+baseline returns a global candidate, not beat times, changing tempo, confidence,
+or a robust rhythm-presence decision. Future work should diagnose octave and
+low-evidence failures before treating the output as a dependable track feature.

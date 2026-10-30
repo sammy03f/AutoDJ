@@ -4,7 +4,8 @@ AutoDJ will analyze, sequence, and mix locally supplied audio. The current
 implementation supports 16-bit PCM WAV loading, time selection, amplitude gain,
 WAV saving, waveform PNG export, an educational direct DFT, spectrum PNG export,
 numerical STFT analysis, amplitude spectrogram PNGs, spectral-flux onset strength,
-candidate onset peak picking, and optional energy-based timing refinement.
+candidate onset peak picking, optional energy-based timing refinement, and an
+experimental global tempo candidate from onset-strength autocorrelation.
 
 The intended flow is:
 
@@ -106,6 +107,15 @@ median/MAD settings on both isolated and repeated fixtures with known and fresh
 noise seeds. All methods share frame-center timestamps, spacing and scoring;
 controls and spacing-stress summaries remain separate. No automatic threshold
 selection, energy refinement, or production default change is introduced.
+`analysis/tempo.py` consumes a uniformly sampled strength curve and its frame
+rate (audio sample rate / hop size). `estimate_tempo` searches integer lags
+inside explicit BPM bounds, with at least two period lengths of input per lag.
+It scales to avoid overflow, subtracts the mean, and normalizes delayed dot
+products by zero-lag energy. `TempoEstimate` contains the selected BPM/lag/score
+(or None) and all searched lags/scores. The score is not calibrated confidence.
+This path does not use thresholded candidates or refined timestamps and does
+not return a beat grid. `evals/tempo.py` independently generates known rhythms,
+reports octave errors and nonrhythmic controls, and saves score-curve plots.
 Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,

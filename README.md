@@ -56,7 +56,9 @@ defaults unchanged. Repeated-event evaluations now expose dense-hit suppression
 and false detections on longer noise controls. A filter-stage diagnostic identifies
 the selected threshold as the active bottleneck in those fixtures. An optional
 median/MAD threshold recovers more sequence hits but admits more noise; it has
-not replaced the existing settings. Tempo estimation is not yet implemented.
+not replaced the existing settings. A first global tempo candidate now comes
+from autocorrelation of the full onset-strength curve, with explicit half-time
+and nonrhythmic-input limitations. Beat tracking is not yet implemented.
 
 ## Development
 
@@ -520,6 +522,38 @@ events F1 falls from 0.823 to 0.788. This is a tradeoff, not a new default.
 Reports and comparison/threshold plots are saved under `evals/results/` and
 `outputs/onset_robust/`; see [evaluation details](evals/README.md).
 
+Estimate a global tempo candidate directly from onset strength:
+
+```python
+from autodj.analysis import estimate_tempo
+
+# Strength has one value per STFT hop, not per audio sample.
+frame_rate = analysis.sample_rate / analysis.hop_size
+result = estimate_tempo(strength, frame_rate, min_bpm=60, max_bpm=200)
+print(result.bpm)  # None when no supported positive correlation is available.
+print(result.lag_frames, result.score)
+```
+
+This uses the full curve, without onset thresholds or timestamp refinement.
+It subtracts the mean and compares delayed copies: `BPM = 60 * frame_rate / lag`.
+The result retains searched integer lags and normalized autocorrelation scores.
+A score is not confidence: even noise or tiny steady-tone numerical fluctuations
+can produce a tempo candidate. Silence and constant strength return no estimate.
+No beat timestamps, octave correction, or streaming analysis are provided.
+
+```sh
+python evals/tempo.py --label "First tempo baseline"
+```
+
+The first run gets 32/40 clean steady rhythm cases within 3% of nominal BPM.
+All eight 150 BPM cases return about 75.29 BPM (half-time). Alternating accents
+and equal subdivisions are evaluated separately because their musical pulse is
+ambiguous. Silence and a single burst return no tempo in the controls, while
+steady tone and noise return spurious candidates. Reports retain all outcomes
+and score curves under `evals/results/tempo-*.json`; comparison and autocorrelation
+plots are under `outputs/tempo/`. This is an educational baseline, not a reliable
+song BPM detector yet.
+
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 
 ```sh
@@ -545,8 +579,8 @@ Public examples must use appropriately licensed audio.
 
 ## Roadmap
 
-- [ ] Audio loading and waveform analysis
-- [ ] FFT / STFT / spectrogram generation
+- [x] Audio loading and waveform analysis
+- [x] FFT / STFT / spectrogram generation
 - [ ] Beat and tempo detection
 - [ ] Beat matching and time stretching
 - [ ] Automatic crossfades

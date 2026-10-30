@@ -529,6 +529,51 @@ including controls (584 versus 240). Isolated-event F1 worsens. It remains an
 optional alternative; a better background estimate alone does not solve noise
 rejection, dense-hit spacing, or musical pulse inference.
 
+## A first tempo candidate from autocorrelation
+
+Onset strength is sampled once per STFT hop, at `F = audio_sample_rate / hop_size`
+frames per second. Tempo estimation can use this entire curve without first
+selecting individual onsets. If a pattern repeats after k strength frames,
+its interval is `k/F` seconds and the corresponding rate is `60*F/k` BPM.
+
+The implementation first divides the nonnegative curve by its maximum to avoid
+large dot-product overflow, then subtracts the mean, giving y. For each searched
+positive integer lag k it computes
+
+`C[k] = sum(y[n] * y[n+k], n=0..N-k-1) / sum(y[n]^2)`.
+
+This normalization cancels overall gain. There is no division by overlap length;
+longer lags have fewer contributing pairs. Subtracting the mean avoids treating
+a constant background as rhythmic energy, but does not remove every artifact.
+The largest positive score wins, with exact ties favoring a shorter lag. There
+is no interpolation, peak-prominence rule, tempo prior, or octave correction.
+
+The search keeps only lags with BPM inside the inclusive bounds and k <= N//2,
+requiring at least two period lengths of data. An empty search, constant/empty
+strength or no positive score yields no estimate. This is a support constraint,
+not a guarantee that enough actual beats are present. Frame-start versus center
+timestamps do not change the strength sampling interval used in this calculation.
+
+At F=64 frames/s, lag 32 corresponds exactly to 120 BPM. A 150 BPM pattern has
+period 25.6 frames; neither 25 nor 26 is exact. Two periods span 51.2 frames,
+which is closer to integer lag 51. Our clean evaluation selects that harmonic,
+returning 75.29 BPM for all eight 150 BPM cases. This illustrates an interaction
+between frame sampling and harmonic ambiguity; a large autocorrelation alone
+does not identify the intended musical beat level.
+
+Alternating strong/weak hits can emphasize a two-beat period. Equal subdivisions
+can emphasize a faster repetition rate, and may contain no evidence of which
+metrical label the fixture generator intended. Search bounds also constrain
+which alternatives are possible. We record nominal BPM and event repetition
+rate separately and do not silently count half/double-time estimates as correct.
+
+Scores are similarity values, not confidence. Scaling a tiny nonconstant curve
+can amplify numerical residue: a mathematically steady tone produces a spurious
+candidate in this first audio evaluation. Noise can also have a largest positive
+correlation without a musical pulse. Both failures remain visible. The baseline
+gets 32/40 clean steady cases within 3% and does not yet establish reliable song
+tempo, changing-tempo analysis, or beat timestamps.
+
 ## Future notes
 
 For each new algorithm, document:
