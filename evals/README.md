@@ -672,3 +672,72 @@ source/input/strength hashes, runtime trials, environment versions and Git state
 Tests check baseline parity, same-audio reuse, frame-rate conversion, lag probes,
 unavailable targets, timing accounting and fixture populations. Exit status
 checks numerical consistency and bounds, not accuracy improvement.
+
+
+## Optional tempo evidence checks
+
+Run `python evals/tempo_evidence.py --label "Optional abstention baseline"`.
+Suite version 1 uses hop 16/frame 128/Fs 2048, search 60–200 BPM and the existing
+3% nominal-BPM tolerance. Peak floor .001 and correlation floor .2 were fixed
+before evaluation, with no parameter sweep. Four arms use the same strength:
+no checks, raw-strength check only, correlation check only, and both checks.
+An accepted estimate must equal the original candidate exactly; rejection
+never selects a different lag. Defaults remain zero/disabled in the library.
+
+Rhythm groups are deliberately reported separately:
+
+- 40 original clean cases: two shapes, five BPM values, gains .1/1, offsets 0/11.
+- 40 quiet stress cases: the same combinations with gains 1e-6 and 1e-4.
+- 20 original alternating-accent/subdivision ambiguity cases.
+- Eight noisy 120 BPM sharp-burst tracks: gains .1/1, Gaussian std .05/.2,
+  fresh seeds 3011/4001, offset 11. All use sixteen nominal beats.
+
+There are 45 controls over durations 2/8/16 seconds: three silences, three
+single bursts, twelve steady tones (128 or 137 Hz, gains .01/1), eighteen white
+noise draws (std .01/.2, seeds 2027/3011/4001), and nine irregular-burst tracks.
+Irregular tracks contain two attacks per second on average, at seeded random
+sample positions, with no declared stable tempo. Such short random patterns
+can accidentally resemble a pulse; control acceptance measures the specified
+heuristic behavior, not a definitive perceptual label. Seed 2027 was previously
+observed; 3011/4001 are new. Noise draws are paired across gains/conditions.
+The 60 original clean/ambiguity baseline curves and candidates reproduce the
+saved hop-16 results exactly.
+
+| Control arm | Tempo returned / 45 | Abstentions |
+| --- | --- | --- |
+| Baseline | 39 | 6 |
+| Strength only | 30 | 15 |
+| Correlation only | 13 | 32 |
+| Both checks | 6 | 39 |
+
+Both checks retain 40/40 correct standard clean cases, but reject the twenty
+1e-6-gain stress cases; all twenty 1e-4-gain cases survive correctly. Correlation
+alone retains all 40 quiet cases. Among eight noisy rhythms, baseline returns
+eight candidates with five correct; both checks return four, all correct. This
+removes three mismatches but also one correct candidate. Nominal accuracy uses
+all cases, so that cost remains visible. All 20 ambiguity candidates survive,
+with 10 nominal matches; the checks do not fix octave or metrical ambiguity.
+
+All 18 white-noise controls are rejected with both checks. Remaining accepted
+controls are the gain-1 137 Hz steady tones at all three durations, and all
+three two-second irregular-burst tracks. Peak-only rejection cannot remove
+these real spectral fluctuations, and the correlation can be high even without
+a declared musical pulse. At two-second duration some lags have only two
+period lengths of support, permitting chance repetition. The gate settings
+remain experimental, especially when switching between normalized float audio
+and integer PCM amplitudes.
+
+`TempoEstimate.rejection_reason` distinguishes insufficient_data, no_variation,
+weak_strength, no_positive_correlation and low_correlation. An accepted result
+has reason None. Early rejection leaves score arrays zero; low-correlation
+rejection retains its curve. The report preserves the ungated curve/candidate,
+raw peak/mean, each arm's decision/reason, classification, settings, hashes,
+versions and Git state. Cases with no estimate stay in accuracy denominators.
+Summaries also separate controls by kind and duration.
+
+JSON reports are `evals/results/tempo-evidence-<run-id>.json`; the comparison PNG
+is under `outputs/tempo_evidence/<run-id>/`. Tests cover inclusive thresholds,
+validation, unchanged default scores, rejection precedence/diagnostics, quiet
+rhythms, control reproducibility and denominator accounting. Exit status checks
+consistent decisions, not universal control rejection. No confidence claim,
+default change or real-music guarantee follows from this small experiment.

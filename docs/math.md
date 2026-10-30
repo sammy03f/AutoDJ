@@ -607,6 +607,38 @@ behavior affect timings. Silence/single-burst controls still abstain, while tone
 and noise return spurious estimates at every tested hop. Temporal resolution
 alone is not a rhythm-presence test.
 
+## Optional abstention checks for tempo candidates
+
+Normalized autocorrelation cancels overall scale. That helps quiet rhythm
+estimation but also lets tiny numerical spectral changes look strongly
+periodic. We add two optional, explicit checks without interpreting either
+as calibrated confidence:
+
+- Raw peak strength must be at least `min_peak_strength`, checked before scaling.
+- The largest positive normalized correlation must be at least `min_correlation`.
+
+Both thresholds default to zero; equality passes, and a nonpositive winning
+score still cannot produce a tempo. The raw floor is in the same units as flux:
+it depends on amplitude convention, gain, FFT size and hop. It breaks gain
+invariance and can reject real but very quiet rhythms. The correlation floor
+is dimensionless, but has no universal probability or false-alarm meaning.
+
+A rejected result contains no BPM, selected lag or selected score. Reasons
+identify insufficient lag support, no variation, weak raw strength, no positive
+correlation, or low correlation. Raw-strength rejection occurs before the curve
+is computed, so that result's scores are zeros. A low-correlation rejection
+retains the computed curve, and the evaluation separately records the original
+unfiltered candidate for comparison.
+
+The first frozen .001/.2 experiment at hop 16 retains all 40 standard clean
+rhythms and rejects 39/45 controls, compared with 6/45 baseline abstentions.
+But all twenty gain-1e-6 rhythms are also rejected even though their baseline
+BPM estimates were correct. Gain-1e-4 rhythms survive. White noise is rejected
+in all 18 tested controls; three gain-1 off-bin 137 Hz tones and three short
+irregular-event sequences still pass. Periodic spectral artifacts and accidental
+repetition can therefore satisfy both checks. Resolving those cases will require
+more evidence than a global score or an absolute strength floor alone.
+
 ## Future notes
 
 For each new algorithm, document:

@@ -59,7 +59,9 @@ median/MAD threshold recovers more sequence hits but admits more noise; it has
 not replaced the existing settings. A first global tempo candidate now comes
 from autocorrelation of the full onset-strength curve, with explicit half-time
 and nonrhythmic-input limitations. A hop-size comparison resolves the tested
-clean half-time error at finer resolution, without changing defaults. Beat
+clean half-time error at finer resolution, without changing defaults. Optional
+strength/correlation checks can now reject weak tempo evidence with explicit
+reasons, but reject some quiet rhythms and still admit some controls. Beat
 tracking is not yet implemented.
 
 ## Development
@@ -575,6 +577,35 @@ guarantees. A smaller hop changes both the flux curve and the lag grid, so this
 is not a pure test of lag rounding. Reports and score/runtime plots are saved
 under `evals/results/tempo-hops-*.json` and `outputs/tempo_hops/`. Existing
 examples and defaults remain unchanged; hop 16 is a candidate for further tests.
+
+Optionally require evidence before returning a tempo:
+
+```python
+result = estimate_tempo(
+    strength, analysis.sample_rate / analysis.hop_size,
+    min_bpm=60, max_bpm=200,
+    min_peak_strength=0.001, min_correlation=0.2,
+)
+print(result.bpm, result.rejection_reason)
+```
+
+Both checks default to zero (disabled). The first compares raw peak strength
+before normalization, so its units depend on audio gain and STFT settings.
+The second requires a minimum normalized autocorrelation score, not a confidence
+probability. Equality passes; a positive correlation is still required.
+Rejections return no BPM and explain why. These example thresholds are
+experimental and should not be assumed appropriate for arbitrary audio scales.
+
+```sh
+python evals/tempo_evidence.py --label "Optional abstention baseline"
+```
+
+With frame 128/hop 16, both checks reduce control tempo outputs from 39/45 to
+6/45 while preserving 40/40 correct standard clean rhythms. They also reject
+20/40 extremely quiet stress cases and one correctly estimated noisy rhythm.
+Loud off-bin steady tones and short irregular bursts still pass. This is a
+measured tradeoff, not a reliable rhythm-presence classifier. Reports and plots
+are saved under `evals/results/tempo-evidence-*.json` and `outputs/tempo_evidence/`.
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 

@@ -123,6 +123,15 @@ curves plus diagnostic nominal/half-time bins. Ground truth only determines
 scoring and probes; it never influences the estimator. The original hop-32
 branch reproduces all saved numerical baseline results. This experiment changes
 neither production algorithms nor default/example settings.
+`estimate_tempo` also accepts opt-in raw-peak and normalized-correlation floors.
+Both default to zero, preserving prior numerical results. Rejections retain
+None for BPM/lag/score and add `TempoEstimate.rejection_reason`. Reasons are
+insufficient_data, no_variation, weak_strength, no_positive_correlation, or
+low_correlation; accepted results have no rejection reason. Early rejects leave
+the searched score array zero; low-correlation rejects retain the computed
+curve. `evals/tempo_evidence.py` compares baseline, each check separately and
+both together on quiet/noisy rhythms and varied controls. It preserves the
+unfiltered candidate and curve alongside every decision for inspection.
 Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,

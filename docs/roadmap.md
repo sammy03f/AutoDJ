@@ -26,7 +26,8 @@
 - [x] Implement and evaluate an optional median/MAD threshold with noise controls and fresh seeds.
 - [x] Build and evaluate a first autocorrelation tempo baseline from unthresholded onset strength.
 - [x] Compare STFT hop sizes to diagnose the clean-tempo half-time error and processing cost.
-- [ ] Address spurious tempo candidates on nonrhythmic inputs before beat tracking.
+- [x] Add and evaluate optional tempo evidence checks with explicit rejection reasons.
+- [ ] Diagnose remaining off-bin-tone/irregular-burst tempo candidates and the quiet-signal tradeoff.
 
 Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
@@ -126,8 +127,17 @@ within 3% (150 BPM returns 150.59 rather than 75.29); ambiguity cases reach
 4.64/8.13/15.12 ms with three repetitions after warm-up. Full scores and probes
 near nominal/half-time lags are saved. Hop changes affect flux as well as lag
 resolution, so this does not isolate rounding alone. Defaults remain unchanged.
-Next small task: address spurious tempo candidates on steady tones and noise.
-Finer hops do not solve these cases or musical half/double-time ambiguity.
+`estimate_tempo` now accepts optional min_peak_strength and min_correlation,
+both disabled by default, and explains abstention via rejection_reason.
+`evals/tempo_evidence.py` fixes .001/.2 at hop 16 and compares each check alone
+and together. Controls returning a tempo drop from 39/45 to 6/45; standard
+clean rhythms remain 40/40 correct. The strength floor rejects all twenty
+1e-6-gain stress cases; twenty 1e-4-gain cases survive. Noisy rhythms lose one
+correct estimate along with three mismatches. Loud 137 Hz tones and three
+short irregular-burst controls still produce candidates. Scores remain
+uncalibrated, defaults remain unchanged, and octave ambiguity is unresolved.
+Next small task: diagnose those residual controls and the scale dependence
+before treating tempo acceptance as a reliable track feature.
 
 ## Subsequent milestones
 
