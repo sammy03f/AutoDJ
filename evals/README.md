@@ -613,3 +613,62 @@ it does not require perfect BPM accuracy or abstention on every control. The
 baseline returns a global candidate, not beat times, changing tempo, confidence,
 or a robust rhythm-presence decision. Future work should diagnose octave and
 low-evidence failures before treating the output as a dependable track feature.
+
+
+## Tempo hop-size comparison
+
+Run `python evals/tempo_hops.py --label "Hop resolution comparison"`.
+Suite version 1 uses exactly the tempo baseline's 40 primary, 20 ambiguity and
+four control waveforms. Each is analyzed at hops 32/16/8 with frame size 128,
+Fs=2048 and the same 60–200 BPM search/3% scoring tolerance. Strength rates are
+64/128/256 frames/s. Input hashes are checked across hops; all 64 hop-32 input
+hashes, strength hashes, lag curves and estimates reproduce the saved baseline.
+No interpolation, octave correction, tuning or default changes are introduced.
+
+The report stores nominal/half-time diagnostic probes: floor and ceil of each
+ideal lag, restricted to bins actually searched. Unsupported targets are marked
+unavailable instead of clamped to a boundary; insufficient duration can also
+leave probes empty. The best bracketing-bin score is reported, not an interpolated
+estimate. These ground-truth probes never influence tempo selection.
+
+| Hop | Strength frames/s | Primary correct / 40 | Challenge correct / 20 | Median total ms/clip |
+| --- | --- | --- | --- | --- |
+| 32 | 64 | 32 | 6 | 4.64 |
+| 16 | 128 | 40 | 10 | 8.13 |
+| 8 | 256 | 40 | 10 | 15.12 |
+
+Primary mean absolute BPM errors are 15.65/0.47/0.29 respectively. At hop 32,
+all eight 150 BPM cases choose 75.29 BPM. Both smaller hops choose 150.59 BPM
+for those cases. For the gain-1, offset-0 sharp-burst example, the best nominal
+and half-time bin scores are 0.805/0.832 at hop 32, 0.921/0.830 at hop 16 and
+0.920/0.862 at hop 8. Score curves make the switch inspectable.
+
+At either smaller hop the challenge results are 10 correct, 6 half-time and
+4 double-time estimates. Silence and a single burst return no estimate at all
+three hops; steady tone and noise still return candidates. A smaller hop helps
+these steady rhythm fixtures but does not solve musical metrical ambiguity or
+nonrhythmic-input rejection. The finite fixtures, repeated gains and offsets
+are not independent real-music evidence.
+
+Timings use perf_counter_ns, one discarded warm-up per hop, and three measured
+repetitions for every fixture/hop. Hop order rotates by fixture to reduce fixed
+ordering bias. Waveform generation, hashing, scoring, probes, plotting and file
+IO are outside timed regions. STFT plus flux and tempo estimation are measured
+separately; total time is their sum within a trial. Each trial is retained with
+per-case median/min/max. Summary times are medians of per-case medians across
+all 64 complete clips; component medians need not sum to the total median.
+These are diagnostic measurements under the recorded environment, not an
+isolated benchmark, speed guarantee, or cross-machine regression threshold.
+Numerical results must remain identical across repetitions; timings need not.
+
+Changing hop changes both the flux waveform and integer-lag resolution. Keeping
+frame size fixed preserves the analysis window but does not make this a pure
+lag-rounding experiment. Hop 16 is a useful candidate for later validation at
+less cost than hop 8 in this run; existing settings remain unchanged.
+
+JSON reports are `evals/results/tempo-hops-<run-id>.json`; accuracy/runtime and
+lag-score PNGs are under `outputs/tempo_hops/<run-id>/`. Reports retain settings,
+source/input/strength hashes, runtime trials, environment versions and Git state.
+Tests check baseline parity, same-audio reuse, frame-rate conversion, lag probes,
+unavailable targets, timing accounting and fixture populations. Exit status
+checks numerical consistency and bounds, not accuracy improvement.

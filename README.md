@@ -58,7 +58,9 @@ the selected threshold as the active bottleneck in those fixtures. An optional
 median/MAD threshold recovers more sequence hits but admits more noise; it has
 not replaced the existing settings. A first global tempo candidate now comes
 from autocorrelation of the full onset-strength curve, with explicit half-time
-and nonrhythmic-input limitations. Beat tracking is not yet implemented.
+and nonrhythmic-input limitations. A hop-size comparison resolves the tested
+clean half-time error at finer resolution, without changing defaults. Beat
+tracking is not yet implemented.
 
 ## Development
 
@@ -553,6 +555,26 @@ steady tone and noise return spurious candidates. Reports retain all outcomes
 and score curves under `evals/results/tempo-*.json`; comparison and autocorrelation
 plots are under `outputs/tempo/`. This is an educational baseline, not a reliable
 song BPM detector yet.
+
+Compare tempo accuracy and timing cost at smaller STFT hops:
+
+```sh
+python evals/tempo_hops.py --label "Hop resolution comparison"
+```
+
+This processes the same 40 steady rhythms, 20 ambiguity cases, and four controls
+with hops 32/16/8, while keeping the frame size at 128 and the estimator unchanged.
+The strength rates are 64/128/256 frames per second. Both smaller hops get 40/40
+steady cases within 3%; the 150 BPM cases return 150.59 instead of 75.29 BPM.
+Ambiguity cases improve from 6/20 to 10/20, but half/double-time interpretation
+and spurious control estimates remain unresolved.
+
+This run's median full-clip processing times were 4.64/8.13/15.12 ms, using
+three repeats after warm-up. These are diagnostic timings, not performance
+guarantees. A smaller hop changes both the flux curve and the lag grid, so this
+is not a pure test of lag rounding. Reports and score/runtime plots are saved
+under `evals/results/tempo-hops-*.json` and `outputs/tempo_hops/`. Existing
+examples and defaults remain unchanged; hop 16 is a candidate for further tests.
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 

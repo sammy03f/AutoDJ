@@ -96,15 +96,19 @@ def summarize(cases):
             "mean_absolute_error_bpm_when_estimated": float(np.mean(errors)) if errors else None}
 
 
-def negative_controls():
+def negative_control_signals():
     n = np.arange(RATE * 8)
     burst = np.zeros(n.size)
     t = np.arange(128)
     burst[RATE:RATE + 128] = np.cos(2 * np.pi * 128 * t / RATE) * np.exp(-t / 24)
     signals = {"silence": np.zeros(n.size), "steady_tone": np.sin(2 * np.pi * 128 * n / RATE),
                "single_burst": burst, "gaussian_noise": np.random.Generator(np.random.PCG64(2027)).normal(0, 0.05, n.size)}
+    return signals
+
+
+def negative_controls():
     controls = []
-    for name, samples in signals.items():
+    for name, samples in negative_control_signals().items():
         _, strength, result = analyze(samples)
         controls.append({"kind": name, "tempo_returned": result.bpm is not None,
                          **result_fields(samples, strength, result)})

@@ -116,6 +116,13 @@ products by zero-lag energy. `TempoEstimate` contains the selected BPM/lag/score
 This path does not use thresholded candidates or refined timestamps and does
 not return a beat grid. `evals/tempo.py` independently generates known rhythms,
 reports octave errors and nonrhythmic controls, and saves score-curve plots.
+`evals/tempo_hops.py` reuses the tempo fixtures and control signal generator,
+keeping the waveform and frame size fixed while varying hop size. It measures
+STFT/flux and tempo time separately, repeats each case, and records full lag
+curves plus diagnostic nominal/half-time bins. Ground truth only determines
+scoring and probes; it never influences the estimator. The original hop-32
+branch reproduces all saved numerical baseline results. This experiment changes
+neither production algorithms nor default/example settings.
 Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,

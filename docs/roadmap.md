@@ -25,7 +25,8 @@
 - [x] Diagnose threshold rejection versus spacing suppression on the frozen sequence suite.
 - [x] Implement and evaluate an optional median/MAD threshold with noise controls and fresh seeds.
 - [x] Build and evaluate a first autocorrelation tempo baseline from unthresholded onset strength.
-- [ ] Diagnose tempo octave errors and nonrhythmic-input estimates before adding beat tracking.
+- [x] Compare STFT hop sizes to diagnose the clean-tempo half-time error and processing cost.
+- [ ] Address spurious tempo candidates on nonrhythmic inputs before beat tracking.
 
 Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
@@ -117,8 +118,16 @@ and 4 controls. Primary accuracy is 32/40 within 3%; all eight 150 BPM cases
 return half-time near 75.29 BPM. The ambiguity set yields 6 correct, 6 half-time,
 2 double-time, and 6 other estimates. Silence and a single burst abstain; steady
 tone and noise produce spurious candidates, so scores are not confidence.
-No onset settings change and no beat grid is produced. Next small task: diagnose
-integer-lag/octave errors and nonrhythmic-input estimates before beat tracking.
+No onset settings change and no beat grid is produced.
+`evals/tempo_hops.py` now compares hops 32/16/8 on identical fixtures, fixed
+frame size 128 and an unchanged estimator. Hops 16 and 8 get 40/40 steady cases
+within 3% (150 BPM returns 150.59 rather than 75.29); ambiguity cases reach
+10/20 versus 6/20. Median clip processing times in the first run are
+4.64/8.13/15.12 ms with three repetitions after warm-up. Full scores and probes
+near nominal/half-time lags are saved. Hop changes affect flux as well as lag
+resolution, so this does not isolate rounding alone. Defaults remain unchanged.
+Next small task: address spurious tempo candidates on steady tones and noise.
+Finer hops do not solve these cases or musical half/double-time ambiguity.
 
 ## Subsequent milestones
 

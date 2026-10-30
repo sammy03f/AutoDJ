@@ -574,6 +574,39 @@ correlation without a musical pulse. Both failures remain visible. The baseline
 gets 32/40 clean steady cases within 3% and does not yet establish reliable song
 tempo, changing-tempo analysis, or beat timestamps.
 
+## Hop resolution and tempo harmonics
+
+With sample rate Fs and hop H, the strength sampling rate is `F=Fs/H`. A
+nominal tempo B corresponds to ideal lag `60*Fs/(H*B)`. At Fs=2048 and B=150,
+this is 25.6 frames for hop 32, 51.2 for hop 16, and 102.4 for hop 8.
+The integer candidates near those values do not have identical rounding errors.
+
+The hop comparison fixes waveform and STFT frame size while evaluating H=32,
+16,8 with the same autocorrelation and tempo selection. Diagnostic probes inspect
+the floor/ceil bins around the nominal lag and twice that lag (half-time).
+Only actually searched bins are included; a target outside the BPM bounds is
+not clamped into range. Probes are labels for inspection, never selection input.
+
+For the clean 150 BPM sharp-burst example, hop 32 gives a best nearby nominal
+score about 0.805 and half-time score 0.832, selecting 75.29 BPM. At hop 16,
+those scores are about 0.921 and 0.830, selecting 150.59 BPM. Hop 8 also selects
+150.59. All 40 steady cases are within 3% at the smaller hops, compared with
+32/40 at hop 32. Only 10/20 ambiguity cases agree with the nominal musical
+annotation at smaller hops, so finer sampling does not determine meter.
+
+Changing hop also changes the comparison distance between successive spectra,
+and therefore the flux waveform itself. The result supports a smaller-hop
+pipeline on these fixtures, but does not isolate lag quantization as the sole
+cause. A fixed-window experiment avoids changing frequency resolution, yet it
+still changes overlap, frame count, lag density and computational work.
+
+The evaluation separates feature-extraction and autocorrelation timing, retains
+three repeated measurements per case, and aggregates per-case medians after
+warm-up. Longer inputs and denser hops increase work; host load and array-library
+behavior affect timings. Silence/single-burst controls still abstain, while tone
+and noise return spurious estimates at every tested hop. Temporal resolution
+alone is not a rhythm-presence test.
+
 ## Future notes
 
 For each new algorithm, document:
