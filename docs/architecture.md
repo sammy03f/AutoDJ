@@ -138,6 +138,13 @@ and half-window lag curves, and agreement separately from missing estimates.
 The halves slice the existing flux curve without resetting its boundary;
 neighboring STFT frames still overlap in audio samples. These measurements
 introduce no production acceptance rule or default changes.
+`evals/tempo_relative.py` selects a relative-flux floor using tuning cases only,
+then generates a separate parameter/seed evaluation split. The experimental
+decision replaces the absolute-strength floor and retains the existing .2
+correlation floor. It never changes the selected BPM, and retains original
+results alongside the new decisions. Reports include the full threshold search,
+split definitions, input/source hashes, score curves, and per-family outcomes.
+The rule currently lives only in evaluation code.
 Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,

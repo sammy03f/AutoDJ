@@ -28,7 +28,8 @@
 - [x] Compare STFT hop sizes to diagnose the clean-tempo half-time error and processing cost.
 - [x] Add and evaluate optional tempo evidence checks with explicit rejection reasons.
 - [x] Diagnose remaining off-bin-tone/irregular-burst tempo candidates and the quiet-signal tradeoff.
-- [ ] Evaluate relative spectral-change evidence on broader controls with separate tuning and untouched evaluation cases.
+- [x] Evaluate relative spectral-change evidence on broader controls with separate tuning and untouched evaluation cases.
+- [ ] Add an opt-in relative-flux tempo check with explicit diagnostics, preserving existing defaults.
 
 Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
@@ -143,8 +144,16 @@ but is only a diagnostic. All six rhythms lose acceptance at gain 1e-6.
 The 16-second 137 Hz tone still returns 120 BPM in both halves, while short
 irregular controls have missing half-window estimates. Window agreement alone
 cannot establish a rhythm. No acceptance rules change.
-Next small task: evaluate relative spectral-change evidence on broader controls,
-with separate tuning and untouched evaluation cases before choosing a rule.
+`evals/tempo_relative.py` now searches eight relative-flux floors on 160 tuning
+cases before generating 160 evaluation cases with different seeds, frequencies
+and tempos. The selected .01 floor plus correlation .2 preserves 92/96 correct
+evaluation tempos versus 46/96 for the absolute floor, and rejects 52/64 controls
+versus 50/64. Nearby tone pairs and short irregular bursts remain accepted;
+four noisy rhythms still return half-time. This is a synthetic parameter holdout,
+not real-music validation. The relative rule remains evaluation-only.
+Next small task: expose the measured rule as an opt-in analysis check with
+explicit relative-strength diagnostics, while preserving all existing defaults
+and documenting that acceptance does not establish a beat grid or musical pulse.
 
 ## Subsequent milestones
 

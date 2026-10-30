@@ -619,6 +619,18 @@ acceptance rule. A 16-second steady tone even gives matching tempos in both
 halves. Short windows can lack enough data for an estimate. Production behavior
 remains unchanged; see [evaluation details](evals/README.md#residual-tempo-diagnostics).
 
+Evaluate a relative-flux acceptance rule using separate tuning and evaluation cases:
+
+```sh
+python evals/tempo_relative.py --label "Relative flux parameter holdout"
+```
+
+Eight candidate floors are compared on tuning cases before evaluation audio is
+generated. The selected .01 floor, with correlation .2, preserves 92/96 correct
+evaluation tempos (including quiet copies) and rejects 52/64 controls. Tone pairs,
+some irregular bursts, and noisy half-time errors remain unresolved. This rule
+is experimental and evaluation-only; see [the study](evals/README.md#relative-flux-parameter-holdout).
+
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 
 ```sh

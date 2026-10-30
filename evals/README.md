@@ -783,3 +783,54 @@ Tests cover known ratios, silence, gain scaling, quiet-rhythm rejection, window
 agreement boundaries, reduced lag support, control reuse and summary accounting.
 Next investigate broader signal families with separate tuning and untouched
 cases before selecting a relative-change acceptance rule.
+
+## Relative-flux parameter holdout
+
+Run `python evals/tempo_relative.py --label "Relative flux parameter holdout"`.
+The experiment selects a relative-flux floor on tuning cases, then generates
+and evaluates a separate split exactly once with that frozen choice. It replaces
+the absolute .001 floor while retaining correlation >= .2. Production defaults
+and algorithms are unchanged.
+
+There are 160 cases per split: 96 rhythms and 64 controls. Rhythms use sharp
+bursts, slow attacks, noisy bursts, and bursts over a sustained tone. Controls
+use silence, a single burst, steady tones, nearby tone pairs, linear chirps,
+white noise, moving-average colored noise, and irregular bursts. Both groups
+have 2/8-second durations and gains 1/1e-6. Gain copies scale the entire mixture,
+so they preserve SNR and are paired observations, not independent trials.
+
+Tuning uses seeds 5101/5107, tempos 80/110/160 BPM and carrier 143 Hz.
+Evaluation uses seeds 6203/6211, tempos 85/115/165 BPM and carrier 157 Hz.
+Tone pairs add a second frequency 3.7 Hz above the carrier; chirps sweep 40 Hz.
+Fixtures, events, hashes and source hashes are saved. Family definitions are
+shared across splits: this is a parameter/seed holdout, not unseen-family or
+real-music validation. Floating signals are not quantized to PCM.
+
+The eight declared floors are .001, .01, .1, .5, 1, 2, 4 and 8. Selection maximizes
+half the sum of rhythm accuracy and control rejection rate, counting abstentions
+and octave errors as incorrect tempos. Equal scores choose the smallest floor.
+Only tuning outcomes enter selection. The first run selected .01; .1 tied.
+
+First report: [tempo-relative-20261030T204343.447871Z.json](results/tempo-relative-20261030T204343.447871Z.json).
+
+| Rule | Tuning correct / 96 | Tuning controls rejected / 64 | Evaluation correct / 96 | Evaluation controls rejected / 64 |
+| --- | --- | --- | --- | --- |
+| Ungated | 96 | 16 | 92 | 16 |
+| Correlation .2 | 96 | 34 | 92 | 36 |
+| Absolute .001 + correlation .2 | 48 | 49 | 46 | 50 |
+| Relative .01 + correlation .2 | 96 | 50 | 92 | 52 |
+
+Relative checking retains all 96 evaluation rhythm candidates, including quiet
+copies. Four noisy 165 BPM cases (two seeds at both gains, duration 8 seconds)
+remain half-time near 82.58 BPM. All eight tone-pair controls and four irregular
+controls still return candidates. Tone pairs can have periodic envelope beating;
+these controls have no declared stable musical beat, not a claim that they have
+no periodic structure. Acceptance should not be interpreted as rhythm confidence.
+
+Reports include all candidate search scores, original and relative decisions,
+and summaries by family, duration and gain. A two-panel plot is saved under
+`outputs/tempo_relative/<run-id>/comparison.png`. Tests check threshold equality,
+missing ratios, rejection reasons, no mutation, tuning split isolation, tie
+breaking, octave-error/abstention accounting, waveform reproducibility, event
+spacing and gain invariance. The next step is an opt-in analysis API for the
+measured rule, keeping defaults and these limitations explicit.

@@ -661,6 +661,31 @@ the data reduces lag support and repetition evidence; adjacent STFT windows stil
 share samples. A 16-second steady 137 Hz tone returns 120 BPM in all three
 windows, demonstrating that stable estimates alone do not establish rhythm.
 
+## Selecting a relative-flux floor
+
+The experimental acceptance rule requires an existing candidate with normalized
+correlation at least .2 and relative peak flux at least tau. It replaces the
+absolute .001 strength floor; applying both would retain the quiet-signal issue.
+Equality passes. Rejection removes the candidate; it never changes its BPM.
+
+The search grid is .001, .01, .1, .5, 1, 2, 4, 8. On tuning cases only, maximize
+
+    utility = 0.5 * (correct nominal tempos / all rhythms
+                     + rejected controls / all controls)
+
+Abstentions and octave errors count as incorrect rhythm estimates. Ties choose
+the smallest floor. This explicitly weights the two groups equally despite
+different sample counts; it is an experimental objective, not a confidence score.
+The selected floor is .01 (.1 ties on tuning). Selection finishes before
+evaluation signals are generated, with no retuning on their results.
+
+Different evaluation tempos, carrier frequencies and random seeds test parameter
+generalization within the same synthetic families. They do not establish accuracy
+on new families or music. The evaluation retains 92/96 correct tempos and rejects
+52/64 controls, but all eight nearby-tone pairs pass, as do four irregular-burst
+cases. Beating between tones can create real envelope variation without a declared
+musical beat. Relative flux cannot by itself distinguish those interpretations.
+
 ## Future notes
 
 For each new algorithm, document:
