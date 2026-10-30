@@ -98,6 +98,14 @@ and suppressed frames; match-count differences along nested candidate sets
 measure lost matching capacity without assigning causal labels to individual
 truth events. The evaluator records controls and all four branches; it does
 not modify the production detector.
+`robust_onset_threshold` in `analysis/onsets.py` computes a separate median/raw-MAD
+curve using the same centered, clipped neighborhood convention. It feeds the
+existing peak picker without changing its rules or the mean/std helper.
+`evals/onset_robust.py` compares fixed, original mean/std, selected mean/std and
+median/MAD settings on both isolated and repeated fixtures with known and fresh
+noise seeds. All methods share frame-center timestamps, spacing and scoring;
+controls and spacing-stress summaries remain separate. No automatic threshold
+selection, energy refinement, or production default change is introduced.
 Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,

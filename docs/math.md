@@ -498,6 +498,37 @@ cannot recover the currently missing hits: the selected threshold has already
 rejected their available candidates. Raw noisy matches may occur by chance;
 these counts do not imply perfect unfiltered onset recognition.
 
+## Median and median absolute deviation for onset thresholds
+
+A large flux peak raises a neighborhood's mean and standard deviation. An
+alternative uses its median m, then `MAD = median(abs(x - m))`, and sets
+`threshold = max(floor, m + multiplier * MAD)`. Median/MAD depend on the middle
+of the values rather than the magnitude of one extreme peak. They can still
+change when a substantial fraction of the neighborhood contains events.
+
+For values `[1, 2, 3, 4, 100]`, m=3 and absolute deviations are
+`[2, 1, 0, 1, 97]`. Their median is 1, so multiplier 4 yields threshold 7
+before applying the floor. We use raw MAD, not a normal-distribution-scaled
+estimate of standard deviation. A multiplier of 4 raw MAD is therefore not
+four standard deviations and has no assumed false-alarm probability here.
+
+For `[1, 1, 1, 100, 1, 1, 1]`, median=1 and MAD=0. The large peak survives,
+but replacing 100 with 1.001 also passes a threshold of 1. The absolute floor
+only prevents this when it exceeds the local median. Zero spread therefore
+has a clear sensitivity cost, rather than proving noise robustness.
+
+Our implementation returns one threshold per frame with radius-sized context
+on either side, includes the current frame, and clips at edges. Parameters
+are radius in frames, dimensionless multiplier, and floor in raw flux units.
+With zero floor, multiplying nonnegative strength by positive gain scales both
+median and MAD by the same gain. Centering uses future frames, so it is offline.
+
+The predeclared radius-12 / raw-MAD-times-4 / floor-0.1 experiment recovers more
+repeated hits on fresh seeds (1328 versus 1091), but raises false detections
+including controls (584 versus 240). Isolated-event F1 worsens. It remains an
+optional alternative; a better background estimate alone does not solve noise
+rejection, dense-hit spacing, or musical pulse inference.
+
 ## Future notes
 
 For each new algorithm, document:

@@ -483,3 +483,68 @@ hashes, settings, environment versions and Git state are retained. Exit status
 checks nested sets, candidate partitions, nonnegative match losses and scoring
 accounting, not improved accuracy. Tests independently isolate the filters,
 check interactions, preserve peak rules, and verify full-branch baseline parity.
+
+
+## Median/MAD threshold comparison
+
+Run `python evals/onset_robust.py --label "Raw median/MAD comparison"`.
+Suite version 1 fixes radius 12, multiplier 4, floor 0.1 before running either
+seed group, without searching/tuning. The threshold is local median plus four
+times raw MAD, floored at 0.1. No Gaussian scaling factor (such as 1.4826) is
+applied. The current frame is included in the centered window, which clips at
+edges without padding. This is an offline method.
+
+Comparators are fixed 10, original mean/std radius 8 / multiplier 3, and selected
+mean/std radius 12 / multiplier 2.5. All other settings stay fixed: Fs 2048,
+STFT 128/hop 32, 100 ms minimum spacing, frame-center times, no energy refinement,
+50 ms one-to-one matching. The existing isolated and repeated-event fixtures
+and scoring are reused. For an isolated truth, the sequence scorer reduces to
+the same nearest-candidate matching rule.
+
+| Group | Seeds | Event tracks | Known hits | Noise controls |
+| --- | --- | --- | --- | --- |
+| Isolated baseline | 401/503/607 | 576 | 576 | 12 |
+| Sequences baseline | 701/809 | 288 | 2304 | 36 |
+| Isolated fresh | 1013/1217 | 384 | 384 | 8 |
+| Sequences fresh | 1013/1217 | 288 | 2304 | 36 |
+
+Fresh noise seeds do not overlap any prior evaluation's seeds. They are shared
+between fixture regimes, and noise is paired within comparisons. Zero-noise
+fixtures repeat; new draws are not new signal families or independent tracks.
+All three repeated-event baseline arms reproduce the earlier saved candidates,
+input hashes and per-hit metrics exactly.
+
+Fresh results below include controls in false counts and F1. Sequence totals
+include the 83.3 ms spacing stress; regular/stress summaries are also saved.
+
+| Group / method | Matches | Misses | False including controls | F1 |
+| --- | --- | --- | --- | --- |
+| Isolated / selected mean/std | 291/384 | 93 | 32 | 0.823 |
+| Isolated / median/MAD | 287/384 | 97 | 57 | 0.788 |
+| Sequences / selected mean/std | 1091/2304 | 1213 | 240 | 0.600 |
+| Sequences / median/MAD | 1328/2304 | 976 | 584 | 0.630 |
+
+On fresh regular-spacing sequences, median/MAD matches 1223/1920 hits versus
+1035 for selected mean/std; on stress cases it matches 105/384 versus 56. The
+fresh sequence noise controls alone produce 104 candidates for median/MAD
+versus 36 for selected mean/std. Thus recovery of dense hits comes with more
+noise detections, and the isolated-event comparison is worse on fresh draws.
+The clean 120 BPM/four-bursts-per-beat example recovers all eight hits, versus
+two with selected mean/std; it is an illustration rather than a general claim.
+
+When local MAD is zero, the threshold becomes max(floor, median). Small values
+above a constant background can pass. Sustained/dense activity can still shift
+the median. The 100 ms spacing constraint remains active even in the fastest
+tracks. Noisy peaks can match by chance, and methods' conditional timing-error
+means use different matched populations. These synthetic cases do not validate
+real-music performance or justify replacing the existing defaults.
+
+Reports `evals/results/onset-robust-<run-id>.json` preserve per-case indices,
+timestamps, match/error details, input/source hashes, all settings, versions,
+and Git state. Summaries cover event cases, controls, combined scoring, shapes,
+noise levels, and regular/stress cases. Plots in `outputs/onset_robust/<run-id>/`
+show comparisons and clean/noisy threshold examples. Tests verify known raw-MAD
+values, clipped neighborhoods, zero spread, input validation, gain scaling,
+dense-hit recovery, baseline compatibility, and seed separation. Exit status
+checks accounting, not improvement. The fresh seeds are now observed data;
+future tuning needs another evaluation set.

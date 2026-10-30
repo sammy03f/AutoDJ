@@ -23,7 +23,8 @@
 - [x] Study the adaptive threshold tradeoff with separate tuning and evaluation noise seeds.
 - [x] Evaluate frozen thresholds on repeated-event sequences and longer noise controls.
 - [x] Diagnose threshold rejection versus spacing suppression on the frozen sequence suite.
-- [ ] Investigate a background estimate less affected by dense events, retaining noise controls.
+- [x] Implement and evaluate an optional median/MAD threshold with noise controls and fresh seeds.
+- [ ] Build a first tempo baseline from unthresholded onset strength on clean synthetic tracks.
 
 Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
@@ -102,9 +103,15 @@ filtering accounts for 1193 additional unmatched hits; spacing suppresses zero
 surviving candidates. Spacing alone does reduce matches when thresholding is
 disabled, but that branch admits 3119 extras. Candidate and match-count effects
 are saved separately; noisy raw peaks can match truth by chance.
-Next small task: investigate a background estimate less affected by dense
-events while retaining noise controls. A future tempo estimator can use the
-unthresholded strength curve; these evaluations do not estimate BPM.
+`robust_onset_threshold` now provides local median + 4 raw MAD, radius 12,
+floor 0.1 as an optional alternative. `evals/onset_robust.py` compares all four
+methods on isolated and repeated events, known seeds and fresh seeds 1013/1217.
+Fresh sequence matches improve from 1091 to 1328/2304 versus selected mean/std,
+but false candidates including controls rise from 240 to 584. Fresh isolated
+F1 worsens from 0.823 to 0.788. No existing threshold settings are replaced.
+Next small task: build a first tempo baseline from the unthresholded strength
+curve on clean synthetic tracks. Event detection remains experimental; tempo
+estimation need not depend on a perfect peak-picked event list.
 
 ## Subsequent milestones
 

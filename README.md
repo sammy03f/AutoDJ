@@ -54,8 +54,9 @@ evaluation now measures misses and false detections. A small tuning study has
 selected a better local mean/std threshold on separate noise seeds, while keeping
 defaults unchanged. Repeated-event evaluations now expose dense-hit suppression
 and false detections on longer noise controls. A filter-stage diagnostic identifies
-the selected threshold as the active bottleneck in those fixtures; tempo estimation
-is not yet implemented.
+the selected threshold as the active bottleneck in those fixtures. An optional
+median/MAD threshold recovers more sequence hits but admits more noise; it has
+not replaced the existing settings. Tempo estimation is not yet implemented.
 
 ## Development
 
@@ -491,6 +492,33 @@ is not a usable detector. The next threshold investigation should address dense
 events raising the local background estimate while still rejecting noise.
 Defaults are unchanged. Reports and plots are under `evals/results/` and
 `outputs/onset_diagnostics/`.
+
+Try an optional local median/MAD threshold:
+
+```python
+from autodj.analysis import robust_onset_threshold
+
+thresholds = robust_onset_threshold(strength, radius=12, mad_multiplier=4, floor=0.1)
+candidates = pick_onsets(strength, analysis.times, threshold=thresholds, min_interval=0.1)
+```
+
+MAD is `median(abs(local_values - local_median))`. The threshold is
+`max(floor, local_median + multiplier * MAD)`; MAD is unscaled. The centered
+window includes the current frame and clips at edges, so it uses future frames.
+A zero MAD leaves the threshold at the local median or floor, which can admit
+small background fluctuations.
+
+```sh
+python evals/onset_robust.py --label "Raw median/MAD comparison"
+```
+
+The settings are fixed before evaluating known and fresh noise seeds. On fresh
+repeated sequences, median/MAD improves matches from 1091 to 1328 out of 2304
+compared with the selected mean/std setting, but false detections including
+controls rise from 240 to 584. F1 rises from 0.600 to 0.630. On fresh isolated
+events F1 falls from 0.823 to 0.788. This is a tradeoff, not a new default.
+Reports and comparison/threshold plots are saved under `evals/results/` and
+`outputs/onset_robust/`; see [evaluation details](evals/README.md).
 
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 

@@ -58,6 +58,49 @@ def local_onset_threshold(
     return thresholds
 
 
+def robust_onset_threshold(
+    strength: Iterable[float], *, radius: int, mad_multiplier: float = 4.0,
+    floor: float = 0.1,
+) -> NDArray[np.float64]:
+    """Return max(floor, local median + multiplier * raw MAD) per frame.
+
+    MAD = median(abs(local_values - median(local_values))), with no normal-
+    distribution scaling factor. Neighborhoods include the current frame and
+    radius frames on each side, clipped at edges without padding. This offline
+    curve uses future frames and does not change peak or spacing rules.
+    Median/MAD are less sensitive to isolated large peaks than mean/std, but
+    dense activity can still affect them. When MAD is zero the threshold is
+    max(floor, median), which can admit small fluctuations above the background.
+    Values and floor are in raw flux units; the multiplier is dimensionless.
+    """
+    if isinstance(radius, bool) or not isinstance(radius, int):
+        raise TypeError("Radius must be an integer")
+    if radius < 1:
+        raise ValueError("Radius must be positive")
+    if not math.isfinite(mad_multiplier) or mad_multiplier < 0:
+        raise ValueError("MAD multiplier must be finite and nonnegative")
+    if not math.isfinite(floor) or floor < 0:
+        raise ValueError("Floor must be finite and nonnegative")
+    values = np.asarray(tuple(strength))
+    if values.ndim != 1:
+        raise ValueError("Strength must be 1-D")
+    if np.iscomplexobj(values):
+        raise TypeError("Strength must be real")
+    values = values.astype(np.float64)
+    if not np.isfinite(values).all() or np.any(values < 0):
+        raise ValueError("Strength must be finite and nonnegative")
+    thresholds = np.empty(values.size, dtype=np.float64)
+    with np.errstate(over="ignore", invalid="ignore"):
+        for index in range(values.size):
+            region = values[max(0, index - radius):index + radius + 1]
+            median = np.median(region)
+            mad = np.median(np.abs(region - median))
+            thresholds[index] = np.maximum(floor, median + mad_multiplier * mad)
+    if not np.isfinite(thresholds).all():
+        raise ValueError("Strength magnitudes are too large to compute finite thresholds")
+    return thresholds
+
+
 def pick_onsets(
     strength: Iterable[float], times: Iterable[float], *, threshold: float | Iterable[float],
     min_interval: float,
