@@ -607,6 +607,18 @@ Loud off-bin steady tones and short irregular bursts still pass. This is a
 measured tradeoff, not a reliable rhythm-presence classifier. Reports and plots
 are saved under `evals/results/tempo-evidence-*.json` and `outputs/tempo_evidence/`.
 
+Inspect the remaining failures across gain and time windows:
+
+```sh
+python evals/tempo_diagnostics.py --label "Gain and window diagnostics"
+```
+
+This saves 204 cases and a comparison plot. Dividing peak flux by mean summed
+FFT magnitude removes ideal gain dependence, but does not yet define a reliable
+acceptance rule. A 16-second steady tone even gives matching tempos in both
+halves. Short windows can lack enough data for an estimate. Production behavior
+remains unchanged; see [evaluation details](evals/README.md#residual-tempo-diagnostics).
+
 Run the repeatable synthetic evaluation cases and save a report plus audio:
 
 ```sh

@@ -27,7 +27,8 @@
 - [x] Build and evaluate a first autocorrelation tempo baseline from unthresholded onset strength.
 - [x] Compare STFT hop sizes to diagnose the clean-tempo half-time error and processing cost.
 - [x] Add and evaluate optional tempo evidence checks with explicit rejection reasons.
-- [ ] Diagnose remaining off-bin-tone/irregular-burst tempo candidates and the quiet-signal tradeoff.
+- [x] Diagnose remaining off-bin-tone/irregular-burst tempo candidates and the quiet-signal tradeoff.
+- [ ] Evaluate relative spectral-change evidence on broader controls with separate tuning and untouched evaluation cases.
 
 Completed first component: a standard-library WAV loader for uncompressed
 16-bit PCM, with synthetic fixtures checking samples, channel layout, metadata,
@@ -136,8 +137,14 @@ clean rhythms remain 40/40 correct. The strength floor rejects all twenty
 correct estimate along with three mismatches. Loud 137 Hz tones and three
 short irregular-burst controls still produce candidates. Scores remain
 uncalibrated, defaults remain unchanged, and octave ambiguity is unresolved.
-Next small task: diagnose those residual controls and the scale dependence
-before treating tempo acceptance as a reliable track feature.
+`evals/tempo_diagnostics.py` compares four scaled copies of 45 controls and six
+clean rhythms (204 cases). Relative peak flux removes the ideal gain dependence,
+but is only a diagnostic. All six rhythms lose acceptance at gain 1e-6.
+The 16-second 137 Hz tone still returns 120 BPM in both halves, while short
+irregular controls have missing half-window estimates. Window agreement alone
+cannot establish a rhythm. No acceptance rules change.
+Next small task: evaluate relative spectral-change evidence on broader controls,
+with separate tuning and untouched evaluation cases before choosing a rule.
 
 ## Subsequent milestones
 

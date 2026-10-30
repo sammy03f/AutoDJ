@@ -741,3 +741,45 @@ validation, unchanged default scores, rejection precedence/diagnostics, quiet
 rhythms, control reproducibility and denominator accounting. Exit status checks
 consistent decisions, not universal control rejection. No confidence claim,
 default change or real-music guarantee follows from this small experiment.
+
+## Residual tempo diagnostics
+
+Run `python evals/tempo_diagnostics.py --label "Gain and window diagnostics"`.
+Reports are saved to `evals/results/tempo-diagnostics-<run-id>.json`, and the
+three-panel comparison to `outputs/tempo_diagnostics/<run-id>/comparison.png`.
+
+The study keeps frame 128/hop 16, the estimator and the .001/.2 evidence checks
+fixed. It reuses all 45 prior controls and adds six clean references (click and
+burst rhythms at 90/120/180 BPM). Each waveform is multiplied by 1, .01, 1e-4
+and 1e-6, yielding 204 cases. These are paired, already observed synthetic
+fixtures, not independent or held-out validation.
+
+Each case records input hash, raw peak flux, mean summed FFT magnitude, their
+ratio, full and half-window autocorrelation curves, lag support, and original
+acceptance. The half windows slice the computed flux without resetting its first
+value. Missing candidates are counted separately from disagreement. Agreement
+means both halves are within 3% of the full candidate, without octave matching.
+
+First saved run: [tempo-diagnostics-20261030T202540.020169Z.json](results/tempo-diagnostics-20261030T202540.020169Z.json).
+All 45 original-scale controls reproduce prior waveform hashes, candidates and
+selected scores. Results with both existing evidence checks:
+
+| Gain multiplier | Rhythms accepted / 6 | Controls accepted / 45 | Accepted controls: agree / disagree / incomplete |
+| --- | --- | --- | --- |
+| 1 | 6 | 6 | 1 / 2 / 3 |
+| .01 | 6 | 3 | 0 / 0 / 3 |
+| 1e-4 | 6 | 3 | 0 / 0 / 3 |
+| 1e-6 | 0 | 0 | 0 / 0 / 0 |
+
+The ungated estimator returns candidates for all six rhythms at every scale.
+The absolute strength floor therefore rejects valid quiet rhythms. Relative
+peak flux stays stable for the representative tone and burst rhythm, but depends
+on analysis settings and signal occupancy; no relative-flux gate is introduced.
+The 16-second tone returns 120 BPM in all windows, so consistency alone cannot
+establish rhythmic content. All three short irregular controls have at least one
+missing half estimate; shorter windows reduce available lag support and evidence.
+
+Tests cover known ratios, silence, gain scaling, quiet-rhythm rejection, window
+agreement boundaries, reduced lag support, control reuse and summary accounting.
+Next investigate broader signal families with separate tuning and untouched
+cases before selecting a relative-change acceptance rule.

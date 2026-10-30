@@ -132,6 +132,12 @@ the searched score array zero; low-correlation rejects retain the computed
 curve. `evals/tempo_evidence.py` compares baseline, each check separately and
 both together on quiet/noisy rhythms and varied controls. It preserves the
 unfiltered candidate and curve alongside every decision for inspection.
+`evals/tempo_diagnostics.py` reuses those controls at four gain multipliers and
+adds six clean rhythm references. It records raw and relative peak flux, full
+and half-window lag curves, and agreement separately from missing estimates.
+The halves slice the existing flux curve without resetting its boundary;
+neighboring STFT frames still overlap in audio samples. These measurements
+introduce no production acceptance rule or default changes.
 Introduce further analysis, DSP, transitions, sequencing, and ML modules only as their
 features are implemented. Prefer simple, testable functions and explicit data
 over speculative abstractions. Matplotlib is the first runtime dependency,

@@ -639,6 +639,28 @@ irregular-event sequences still pass. Periodic spectral artifacts and accidental
 repetition can therefore satisfy both checks. Resolving those cases will require
 more evidence than a global score or an absolute strength floor alone.
 
+## Relative flux and tempo window diagnostics
+
+For raw STFT magnitudes M[t,k] and positive spectral flux f[t], the diagnostic is
+
+    relative_peak_flux = max_t f[t] / mean_t(sum_k M[t,k])
+
+Multiplying audio by gain g multiplies both quantities by |g|, so the ratio is
+unchanged in exact arithmetic. Silence and empty input return no ratio. Numerical
+roundoff can matter near zero. The ratio is dimensionless but depends on the
+window, hop and fraction of the clip occupied by events; it is not a probability.
+At frame 128/hop 16, the 8-second 137 Hz tone has ratio about 0.000705, versus
+5.884914 for the 120 BPM burst reference. This observed separation motivates a
+broader evaluation, not a threshold chosen from these already inspected cases.
+
+The diagnostic also slices the computed flux at floor(N/2) and estimates tempo
+in each half. It preserves the existing flux at the split. Agreement requires
+both half estimates to be within 3% of the full estimate, with no octave matching.
+A missing estimate yields an incomplete comparison, not a disagreement. Halving
+the data reduces lag support and repetition evidence; adjacent STFT windows still
+share samples. A 16-second steady 137 Hz tone returns 120 BPM in all three
+windows, demonstrating that stable estimates alone do not establish rhythm.
+
 ## Future notes
 
 For each new algorithm, document:
